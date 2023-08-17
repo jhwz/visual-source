@@ -1,0 +1,36 @@
+/* Spacing scale inspired by tailwind scale */
+:root {
+	--sp-0p5: 0.125rem;
+	--sp-01: 0.25rem;
+	--sp-01p5: 0.375rem;
+	--sp-02: 0.5rem;
+	--sp-02p5: 0.625rem;
+	--sp-03: 0.75rem;
+	--sp-03p5: 0.875rem;
+	--sp-04: 1rem;
+	--sp-05: 1.25rem;
+	--sp-06: 1.5rem;
+	--sp-07: 1.75rem;
+	--sp-08: 2rem;
+	--sp-09: 2.25rem;
+	--sp-10: 2.5rem;
+	--sp-11: 2.75rem;
+	--sp-12: 3rem;
+	--sp-14: 3.5rem;
+	--sp-16: 4rem;
+	--sp-20: 5rem;
+	--sp-24: 6rem;
+	--sp-28: 7rem;
+	--sp-32: 8rem;
+	--sp-36: 9rem;
+	--sp-40: 10rem;
+	--sp-44: 11rem;
+	--sp-48: 12rem;
+	--sp-52: 13rem;
+	--sp-56: 14rem;
+	--sp-60: 15rem;
+	--sp-64: 16rem;
+	--sp-72: 18rem;
+	--sp-80: 20rem;
+	--sp-96: 24rem;
+}
