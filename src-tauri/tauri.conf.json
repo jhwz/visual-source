@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
     "beforeBuildCommand": "pnpm run build",
-    "beforeDevCommand": "pnpm run dev",
+    "beforeDevCommand": "pnpm run vite-dev",
     "devPath": "http://localhost:5470",
     "distDir": "../build"
   },
@@ -29,7 +29,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "color-editor.joelhowse",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -55,11 +55,11 @@
     },
     "windows": [
       {
-        "fullscreen": false,
-        "height": 600,
-        "resizable": true,
         "title": "Color Editor",
-        "width": 800
+        "fullscreen": false,
+        "height": 800,
+        "width": 1200,
+        "resizable": true
       }
     ]
   }

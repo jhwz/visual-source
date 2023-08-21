@@ -12,4 +12,26 @@ body {
 	font-size: 16px;
 	line-height: 1.5;
 	-webkit-font-smoothing: antialiased;
+	background-color: #222227;
+	position: relative;
+}
+
+button {
+	background: inherit;
+	color: inherit;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+}
+
+color-line {
+	display: block;
+	height: 3px;
+	background-color: #000;
+	position: absolute;
+	transform-origin: left;
+	z-index: 20;
 }
