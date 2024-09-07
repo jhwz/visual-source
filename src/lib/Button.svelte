@@ -1,14 +1,21 @@
 <script lang="ts">
-	import type { SvelteComponent } from 'svelte';
+	import type { Component } from 'svelte';
 
-	export let icon: typeof SvelteComponent<any> | null = null;
-	export let disabled = false;
+	type Props = {
+		icon?: Component | null;
+		disabled?: boolean;
+		onclick?: (event: any) => void;
+		children?: import('svelte').Snippet;
+	};
+
+	let { icon = null, disabled = false, onclick, children }: Props = $props();
 </script>
 
-<button on:click class:icon={!!icon} {disabled}>
-	<slot />
+<button {onclick} class:icon={!!icon} {disabled}>
+	{@render children?.()}
 
-	<svelte:component this={icon} />
+	<!-- svelte-ignore element_invalid_self_closing_tag -->
+	{#if icon}<icon />{/if}
 </button>
 
 <style>

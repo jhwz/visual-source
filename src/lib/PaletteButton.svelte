@@ -1,10 +1,14 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import type { MouseEventHandler } from 'svelte/elements';
 
-	const dispatch = createEventDispatcher<{ change: string }>();
+	type Props = {
+		name: string;
+		selected: boolean;
+		onclick?: MouseEventHandler<HTMLInputElement>;
+		onchange: (s: string) => void;
+	};
 
-	export let name: string;
-	export let selected: boolean;
+	let { name, selected, onclick, onchange }: Props = $props();
 </script>
 
 <input
@@ -12,15 +16,15 @@
 	value={name}
 	class:selected
 	readonly
-	on:click
-	on:dblclick={(e) => {
+	{onclick}
+	ondblclick={(e) => {
 		e.currentTarget.readOnly = false;
 	}}
-	on:blur={(e) => {
+	onblur={(e) => {
 		e.currentTarget.readOnly = true;
-		dispatch('change', e.currentTarget.value);
+		onchange(e.currentTarget.value);
 	}}
-	on:keydown={(e) => {
+	onkeydown={(e) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			e.currentTarget.blur();
@@ -50,8 +54,6 @@
 	input.selected {
 		background-color: #444;
 		color: #ccc;
-	}
-	input:not(:read-only) {
 	}
 	input:hover {
 		color: #ccc;

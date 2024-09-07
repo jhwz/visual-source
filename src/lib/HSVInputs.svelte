@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import { hex_to_rgb, rgb_to_hex, rgb_to_hsv } from './colors.js';
+	import { hex_to_rgb, rgb_to_hsv } from './colors.js';
 
-	const dispatch = createEventDispatcher<{ change: string }>();
+	type Props = {
+		color: string;
+	};
 
-	export let color: string;
+	let { color }: Props = $props();
 
-	$: hsv = rgb_to_hsv(hex_to_rgb(color));
+	let hsv = $derived(rgb_to_hsv(hex_to_rgb(color)));
 </script>
 
 <div>

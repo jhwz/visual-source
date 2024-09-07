@@ -11,17 +11,28 @@
 	import Minus from '$lib/icons/Minus.svelte';
 	import { onMount, tick } from 'svelte';
 
-	export let data: PageData;
+	type Props = {
+		data: PageData;
+	};
 
-	async function save(palettes: Palette[]) {
-		await invoke('save', { data: JSON.stringify(palettes) });
-		data.palettes = palettes;
+	let { data = $bindable() }: Props = $props();
+
+	let palettes = $state(data.palettes);
+
+	async function save(p: Palette[]) {
+		await invoke('save', { data: JSON.stringify(p) });
+		palettes = p;
 		tick().then(redraw_lines);
 	}
 
-	function set_up(palettes: Palette[]): number {
+	function set_up(): number {
 		if (palettes.length === 0) {
-			data.palettes = [{ name: 'Palette 1', colors: ['#ffffff', '#AAAAAA', '#555555', '#000000'] }];
+			palettes = [
+				{
+					name: 'Palette 1',
+					colors: ['#ffffff', '#AAAAAA', '#555555', '#000000']
+				}
+			];
 		}
 		return 0;
 	}
@@ -29,66 +40,73 @@
 	function add_color() {
 		if (palette.colors.length === 0) {
 			palette.colors.push('#ffffff');
+		} else {
+			palette.colors.push(palette.colors.at(-1) as string);
 		}
-		palette.colors.push(palette.colors.at(-1) as string);
-		save(data.palettes);
+		save(palettes);
 	}
 
 	function delete_color() {
 		palette.colors = palette.colors.filter((_, j) => j !== colorIndex);
 		colorIndex = Math.min(Math.max(colorIndex! - 1, 0), palette.colors.length - 1);
-		save(data.palettes);
+		save(palettes);
 	}
 
-	let paletteIndex = set_up(data.palettes);
-	$: palette = data.palettes[paletteIndex];
+	let paletteIndex = $state(set_up());
+	let palette = $state(data.palettes[0]);
+	$effect(() => {
+		palette = palettes[paletteIndex];
+	});
 
-	let colorIndex: number | null = null;
+	let colorIndex: number | null = $state(null);
 
-	let colorsHeight = 0;
+	let colorsHeight = $state(0);
 
 	onMount(redraw_lines);
 </script>
 
-<svelte:window on:resize={redraw_lines} />
+<svelte:window onresize={redraw_lines} />
 
 <page-grid>
 	<page-sidebar>
 		<palette-buttons>
 			<button
-				on:click={() => {
-					data.palettes.push({ name: `Palette ${data.palettes.length + 1}`, colors: [] });
-					paletteIndex = data.palettes.length - 1;
+				onclick={() => {
+					palettes.push({
+						name: `Palette ${palettes.length + 1}`,
+						colors: []
+					});
+					paletteIndex = palettes.length - 1;
 					colorIndex = null;
-					save(data.palettes);
+					save(palettes);
 				}}
 			>
 				<Plus />
 			</button>
 			<button
-				on:click={() => {
-					data.palettes = data.palettes.filter((_, i) => i !== paletteIndex);
-					paletteIndex = data.palettes.length - 1;
-					save(data.palettes);
+				onclick={() => {
+					palettes = palettes.filter((_, i) => i !== paletteIndex);
+					paletteIndex = palettes.length - 1;
+					save(palettes);
 				}}
-				disabled={data.palettes.length <= 1}
+				disabled={palettes.length <= 1}
 			>
 				<Minus />
 			</button>
 		</palette-buttons>
 
-		{#each data.palettes as p, i}
+		{#each palettes as p, i}
 			<PaletteButton
 				name={p.name}
 				selected={paletteIndex === i}
-				on:click={() => {
+				onclick={() => {
 					paletteIndex = i;
 					colorIndex = null;
 					tick().then(redraw_lines);
 				}}
-				on:change={(e) => {
-					p.name = e.detail;
-					save(data.palettes);
+				onchange={(name) => {
+					p.name = name;
+					save(palettes);
 				}}
 			/>
 		{/each}
@@ -101,13 +119,13 @@
 					{color}
 					{selected}
 					height={colorsHeight}
-					on:click={() => {
+					onclick={() => {
 						if (i == colorIndex) colorIndex = null;
 						else colorIndex = i;
 					}}
-					on:change={(e) => {
-						palette.colors[i] = e.detail;
-						save(data.palettes);
+					onchange={(color) => {
+						palette.colors[i] = color;
+						save(palettes);
 					}}
 				/>
 			{/each}
@@ -121,9 +139,9 @@
 				<span> RGB </span>
 				<RgbInputs
 					{color}
-					on:change={(e) => {
-						palette.colors[colorIndex] = e.detail;
-						save(data.palettes);
+					onchange={(color) => {
+						palette.colors[colorIndex!] = color;
+						save(palettes);
 					}}
 				/>
 				<span> HSV </span>

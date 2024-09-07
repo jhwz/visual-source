@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "tauri": "tauri dev -- -- /Users/joel/Code/color-editor/src/lib/css/colors.json"
+    "tauri": "tauri dev -- -- /Users/joel/Code/color-editor/src/lib/css/colors.json",
+    "format": "prettier --write src"
   },
   "license": "MIT",
   "dependencies": {
@@ -25,6 +26,8 @@
     "tslib": "^2.4.1",
     "typescript": "^5.5.4",
     "vite": "^5.4.3",
-    "@tauri-apps/cli": ">=2.0.0-rc.0"
+    "@tauri-apps/cli": ">=2.0.0-rc.0",
+    "prettier": "^3.1.1",
+    "prettier-plugin-svelte": "^3.1.2"
   }
 }

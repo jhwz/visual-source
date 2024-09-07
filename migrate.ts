@@ -1,5 +1,6 @@
 import { migrate } from "svelte/compiler";
 import fs from "fs";
+import path from "path";
 
 // // iterate recursively over all the .svelte files in src
 const walk = (dir: string, callback: (path: string) => void) => {
@@ -14,13 +15,13 @@ const walk = (dir: string, callback: (path: string) => void) => {
   }
 };
 
-// walk("src", (path) => {
-//   const source = fs.readFileSync(path, "utf-8");
-//   const result = migrate(source);
-//   fs.writeFileSync(path, result.code);
-// });
+walk("src", (path) => {
+  const source = fs.readFileSync(path, "utf-8");
+  const result = migrate(source);
+  fs.writeFileSync(path, result.code);
+});
 
-const filename = "./src/lib/Button.svelte";
-const source = fs.readFileSync(filename, "utf-8");
-const result = migrate(source);
-fs.writeFileSync(filename, result.code);
+// const filename = "./src/lib/Button.svelte";
+// const source = fs.readFileSync(filename, "utf-8");
+// const result = migrate(source);
+// fs.writeFileSync(filename, result.code);

@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { hex_to_rgb, rgb_to_hex } from './colors.js';
 
-	const dispatch = createEventDispatcher<{ change: string }>();
+	type Props = {
+		color: string;
+		onchange: (s: string) => void;
+	};
 
-	export let color: string;
+	let { color, onchange }: Props = $props();
 
-	$: rgb = hex_to_rgb(color);
+	let rgb = $derived(hex_to_rgb(color));
 
 	function validate(idx: number, e: Event) {
 		const input = e.currentTarget! as HTMLInputElement;
@@ -16,13 +18,13 @@
 		}
 
 		rgb[idx] = Math.min(Math.max(parseInt(input.value), 0), 255);
-		dispatch('change', rgb_to_hex(rgb));
+		onchange(rgb_to_hex(rgb));
 	}
 </script>
 
 <div>
 	{#each rgb as v, i}
-		<input value={v} on:change={(e) => validate(i, e)} />
+		<input value={v} onchange={(e) => validate(i, e)} />
 	{/each}
 </div>
 

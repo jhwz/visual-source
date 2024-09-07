@@ -43,16 +43,19 @@
 </script>
 
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { hex_to_rgb, hsv_to_rgb, rgb_to_hex, rgb_to_hsv } from './colors.js';
 
-	const dispatch = createEventDispatcher<{ change: string; click: null }>();
+	type Props = {
+		color: string;
+		selected: boolean;
+		height: number;
+		onchange: (s: string) => void;
+		onclick: () => void;
+	};
 
-	export let color: string;
-	export let selected: boolean;
-	export let height: number;
+	let { color, selected, height, onchange, onclick }: Props = $props();
 
-	$: hsv = rgb_to_hsv(hex_to_rgb(color));
+	let hsv = $state(rgb_to_hsv(hex_to_rgb(color)));
 
 	function pointerdown(e: PointerEvent & { currentTarget: HTMLElement }) {
 		e.currentTarget.setPointerCapture(e.pointerId);
@@ -73,27 +76,30 @@
 	function pointerup(e: PointerEvent & { currentTarget: HTMLElement }) {
 		e.stopPropagation();
 		e.currentTarget.releasePointerCapture(e.pointerId);
-		dispatch('change', rgb_to_hex(hsv_to_rgb(hsv)));
-	}
 
-	function onclick(e: MouseEvent) {
-		if (!selected) dispatch('click');
-		else if (e.currentTarget === e.target) {
-			dispatch('click');
-		}
+		onchange(rgb_to_hex(hsv_to_rgb(hsv)));
 	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<color-control class:selected style="--color: rgb({hsv_to_rgb(hsv).join(' ')})" on:click={onclick}>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<color-control
+	class:selected
+	style="--color: rgb({hsv_to_rgb(hsv).join(' ')})"
+	onclick={(e: Event) => {
+		if (!selected) onclick();
+		else if (e.currentTarget === e.target) {
+			onclick();
+		}
+	}}
+>
 	{#each hsv as v, i}
 		<color-handle
 			class={i == 0 ? 'h' : i == 1 ? 's' : 'v'}
 			style="--position: {v * (height - 20)}px"
-			on:pointerdown={pointerdown}
-			on:pointerup={pointerup}
-			on:pointermove={pointermove}
+			onpointerdown={pointerdown}
+			onpointerup={pointerup}
+			onpointermove={pointermove}
 		></color-handle>
 	{/each}
 </color-control>
