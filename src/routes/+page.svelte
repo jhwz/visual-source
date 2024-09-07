@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invoke } from '@tauri-apps/api/tauri';
+	import { invoke } from '@tauri-apps/api/core';
 	import type { PageData } from './$types.js';
 	import type { Palette } from '$lib/palette.js';
 	import Plus from '$lib/icons/Plus.svelte';

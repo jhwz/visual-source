@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	export function redraw_lines() {
 		// remove any existing lines
 		for (const n of document.querySelectorAll('color-line')) {
@@ -94,7 +94,7 @@
 			on:pointerdown={pointerdown}
 			on:pointerup={pointerup}
 			on:pointermove={pointermove}
-		/>
+		></color-handle>
 	{/each}
 </color-control>
 
