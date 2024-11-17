@@ -1,41 +1,41 @@
 <script lang="ts">
-	import type { MouseEventHandler } from 'svelte/elements';
-
 	type Props = {
 		name: string;
 		selected: boolean;
-		onclick?: MouseEventHandler<HTMLInputElement>;
+		onclick?: () => void;
 		onchange: (s: string) => void;
 	};
 
 	let { name, selected, onclick, onchange }: Props = $props();
+
+	let editable = $state(false);
 </script>
 
-<input
-	type="text"
-	value={name}
-	class:selected
-	readonly
-	{onclick}
-	ondblclick={(e) => {
-		e.currentTarget.readOnly = false;
+<button
+	onclick={() => {
+		if (!selected) onclick?.();
 	}}
-	onblur={(e) => {
-		e.currentTarget.readOnly = true;
-		onchange(e.currentTarget.value);
+	ondblclick={() => {
+		editable = true;
 	}}
 	onkeydown={(e) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			e.currentTarget.blur();
+		if (editable && e.key === 'Enter') {
+			e.preventDefault;
+			editable = false;
+			name = e.currentTarget.innerText!;
+			onchange(name);
 		}
 	}}
-/>
+	class:selected
+	contenteditable={selected && editable ? 'true' : 'false'}
+>
+	{name}
+</button>
 
 <style>
-	input {
+	button {
 		display: block;
-		max-width: 8rem;
+		max-width: 12rem;
 		width: 100%;
 
 		border: none;
@@ -43,19 +43,24 @@
 		cursor: pointer;
 
 		color: #aaa;
+		text-align: left;
 		background-color: inherit;
 
 		font-size: 1rem;
-		padding: var(--sp-02) var(--sp-04);
+		padding: var(--sp-02) var(--sp-02);
 		padding-right: var(--sp-06);
 
 		user-select: none;
 	}
-	input.selected {
+	button.selected {
 		background-color: #444;
 		color: #ccc;
 	}
-	input:hover {
+	button:not(:is(.selected, .editable)):hover {
 		color: #ccc;
+	}
+	button[contenteditable='true'] {
+		background-color: inherit;
+		border: 1px solid #444;
 	}
 </style>

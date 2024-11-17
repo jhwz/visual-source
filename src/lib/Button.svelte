@@ -8,14 +8,13 @@
 		children?: import('svelte').Snippet;
 	};
 
-	let { icon = null, disabled = false, onclick, children }: Props = $props();
+	let { icon: Icon = null, disabled = false, onclick, children }: Props = $props();
 </script>
 
-<button {onclick} class:icon={!!icon} {disabled}>
+<button {onclick} class:icon={!!Icon} {disabled}>
 	{@render children?.()}
 
-	<!-- svelte-ignore element_invalid_self_closing_tag -->
-	{#if icon}<icon />{/if}
+	{#if Icon}<Icon />{/if}
 </button>
 
 <style>

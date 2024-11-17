@@ -27,11 +27,11 @@ button {
 	cursor: pointer;
 }
 
-color-line {
-	display: block;
-	height: 3px;
-	background-color: #000;
+:popover-open {
+	width: 200px;
 	position: absolute;
-	transform-origin: left;
-	z-index: 20;
+	inset: unset;
+	top: 0;
+	right: 5px;
+	margin: 0;
 }

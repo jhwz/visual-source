@@ -1,2 +1,3 @@
 bun.lockb
 src-tauri
+src/lib/css/colors.json

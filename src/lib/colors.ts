@@ -1,4 +1,4 @@
-type Vec3 = [number, number, number];
+export type Vec3 = [number, number, number];
 
 export function hex_to_rgb(hex: string): Vec3 {
 	const r = parseInt(hex.slice(1, 3), 16);
@@ -79,4 +79,9 @@ export function hsv_to_rgb([h, s, v]: Vec3): Vec3 {
 	}
 
 	return [r * 255, g * 255, b * 255];
+}
+
+export function contrast_text_color([r, g, b]: Vec3): Vec3 {
+	const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+	return luminance > 0.5 ? [0, 0, 0] : [255, 255, 255];
 }
