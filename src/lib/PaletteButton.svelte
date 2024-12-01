@@ -2,7 +2,7 @@
 	type Props = {
 		name: string;
 		selected: boolean;
-		onclick?: () => void;
+		onclick: () => void;
 		onchange: (s: string) => void;
 	};
 
@@ -11,31 +11,41 @@
 	let editable = $state(false);
 </script>
 
-<button
-	onclick={() => {
-		if (!selected) onclick?.();
-	}}
-	ondblclick={() => {
-		editable = true;
-	}}
-	onkeydown={(e) => {
-		if (editable && e.key === 'Enter') {
-			e.preventDefault;
-			editable = false;
-			name = e.currentTarget.innerText!;
+{#if editable}
+	<!-- svelte-ignore a11y_autofocus -->
+	<input
+		type="text"
+		value={name}
+		autofocus
+		onchange={(e) => {
+			name = e.currentTarget.value.trim();
 			onchange(name);
-		}
-	}}
-	class:selected
-	contenteditable={selected && editable ? 'true' : 'false'}
->
-	{name}
-</button>
+			editable = false;
+		}}
+		onblur={() => {
+			editable = false;
+		}}
+	/>
+{:else}
+	<button
+		onclick={() => {
+			if (!selected) {
+				onclick();
+			} else {
+				editable = true;
+			}
+		}}
+		class:selected
+		contenteditable={selected && editable ? 'true' : 'false'}
+	>
+		{name}
+	</button>
+{/if}
 
 <style>
-	button {
+	button,
+	input {
 		display: block;
-		max-width: 12rem;
 		width: 100%;
 
 		border: none;
@@ -49,18 +59,25 @@
 		font-size: 1rem;
 		padding: var(--sp-02) var(--sp-02);
 		padding-right: var(--sp-06);
+	}
 
+	input {
+		background-color: #333;
+	}
+
+	button {
 		user-select: none;
-	}
-	button.selected {
-		background-color: #444;
-		color: #ccc;
-	}
-	button:not(:is(.selected, .editable)):hover {
-		color: #ccc;
-	}
-	button[contenteditable='true'] {
-		background-color: inherit;
-		border: 1px solid #444;
+
+		&.selected {
+			background-color: #444;
+			color: #ccc;
+		}
+		&:not(:is(.selected, .editable)):hover {
+			color: #ccc;
+		}
+		&[contenteditable='true'] {
+			background-color: inherit;
+			border: 1px solid #444;
+		}
 	}
 </style>

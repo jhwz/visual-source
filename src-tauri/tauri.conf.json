@@ -1,7 +1,7 @@
 {
-  "productName": "color-editor",
+  "productName": "visual-source",
   "version": "0.1.0",
-  "identifier": "com.color-editor.app",
+  "identifier": "com.visual-source.app",
   "build": {
     "beforeDevCommand": "bun run vite-dev",
     "devUrl": "http://localhost:1420",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "Color Editor",
+        "title": "Visual Source",
         "fullscreen": false,
         "height": 800,
         "width": 1200,

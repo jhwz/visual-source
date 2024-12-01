@@ -1,4 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
+import { generate_css } from './generate/css.js';
 import { resolve_ref, type $RefType } from './reftype.js';
 
 type $Ref = $RefType<Spec>;
@@ -6,6 +8,7 @@ type $Ref = $RefType<Spec>;
 export type Spec = {
 	palettes: Palette[];
 	tokens: Token[];
+	outputs?: PaletteOutput;
 };
 
 export type Token = {
@@ -17,6 +20,12 @@ export type Token = {
 export type Palette = {
 	name: string;
 	colors: string[];
+};
+
+type PaletteOutput = {
+	css?: {
+		filename: string;
+	};
 };
 
 export const spec: Spec = $state({ palettes: [], tokens: [] });
@@ -32,8 +41,15 @@ invoke<string>('get').then((str) => {
 	// Save the spec anytime it changes
 	$effect.root(() => {
 		invoke('save', { data: JSON.stringify(spec) });
+		write_spec_outputs();
 	});
 });
+
+export async function write_spec_outputs() {
+	if (spec.outputs?.css?.filename) {
+		await writeTextFile(spec.outputs.css.filename, generate_css(spec));
+	}
+}
 
 export function token_value(token: Token): string {
 	if (token.value) return token.value;
