@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { writeTextFile } from '@tauri-apps/plugin-fs';
+import { environment } from './environment/index.js';
 import { generate_css } from './generate/css.js';
+import { generate_json } from './generate/json.js';
 import { resolve_ref, type $RefType } from './reftype.js';
 
 type $Ref = $RefType<Spec>;
@@ -8,10 +9,19 @@ type $Ref = $RefType<Spec>;
 export type Spec = {
 	palettes: Palette[];
 	tokens: Token[];
-	outputs?: PaletteOutput;
+	token_groups: TokenGroup[];
+	spacing: {
+		values: string[];
+	};
+};
+
+export type TokenGroup = {
+	name: string;
+	tokens: number[];
 };
 
 export type Token = {
+	id: number;
 	name: string;
 	value?: string;
 	$ref?: $Ref;
@@ -22,37 +32,62 @@ export type Palette = {
 	colors: string[];
 };
 
-type PaletteOutput = {
-	css?: {
-		filename: string;
-	};
-};
-
-export const spec: Spec = $state({ palettes: [], tokens: [] });
+export const spec: Spec = $state({
+	palettes: [],
+	tokens: [],
+	token_groups: [],
+	spacing: { values: [] }
+});
 
 // Can't use top level await because of webkit bug. See
 // https://github.com/tauri-apps/tauri/discussions/9795.
-// TODO: eventually switch back to top level await.
-invoke<string>('get').then((str) => {
-	const spec2 = JSON.parse(str);
-	spec.palettes = spec2.palettes || [];
-	spec.tokens = spec2.tokens || [];
+if (environment === 'tauri') {
+	invoke<string>('get').then((str) => {
+		const spec2: Spec = JSON.parse(str);
+		for (const [index, token] of (spec2.tokens || []).entries()) {
+			if (token.id == null) token.id = index + 1;
+		}
+		Object.assign(spec, spec2);
 
-	// Save the spec anytime it changes
-	$effect.root(() => {
-		invoke('save', { data: JSON.stringify(spec) });
-		write_spec_outputs();
+		$effect.root(() => {
+			$effect(() => {
+				console.log('spec changed');
+				write_spec_outputs();
+			});
+		});
 	});
-});
-
-export async function write_spec_outputs() {
-	if (spec.outputs?.css?.filename) {
-		await writeTextFile(spec.outputs.css.filename, generate_css(spec));
-	}
 }
 
-export function token_value(token: Token): string {
+export async function write_spec_outputs() {
+	await invoke('write', {
+		filename: 'manifest.json',
+		data: JSON.stringify(spec)
+	});
+	await invoke('write', { filename: 'visual-source.css', data: generate_css(spec) });
+	await invoke('write', { filename: 'visual-source.json', data: generate_json(spec) });
+}
+
+export function token_value(token: Token, specification?: Spec): string {
 	if (token.value) return token.value;
 	if (!token.$ref) throw new Error('Token has no value or reference');
-	return resolve_ref(spec, token.$ref) as string;
+	return resolve_ref(specification || spec, token.$ref) as string;
+}
+
+type ResolvedToken = Omit<Token, '$ref' | 'value' | 'id'> & {
+	value: string;
+};
+
+export type ResolvedSpec = {
+	palettes: Palette[];
+	tokens: ResolvedToken[];
+	spacing: {
+		values: string[];
+	};
+};
+
+export function resolved_spec(spec: Spec): ResolvedSpec {
+	const tokens = spec.tokens.map((token): ResolvedToken => {
+		return { name: token.name, value: token_value(token, spec) };
+	});
+	return { palettes: spec.palettes, tokens, spacing: spec.spacing };
 }

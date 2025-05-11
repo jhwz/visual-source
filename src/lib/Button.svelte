@@ -24,8 +24,8 @@
 		gap: var(--sp-02);
 
 		border: none;
-		background-color: #333;
-		color: #fff;
+		background-color: var(--primary-background);
+		color: var(--primary-text-01);
 		border-radius: 5px;
 		cursor: pointer;
 
@@ -33,13 +33,21 @@
 
 		font-size: 0.9rem;
 		padding: var(--sp-02) var(--sp-04);
-	}
-	button:disabled {
-		color: #888;
-		cursor: not-allowed;
-	}
 
-	button:not(:disabled):hover {
-		background-color: #444;
+		transition:
+			background-color 0.15s,
+			color 0.15s;
+
+		&:not(:disabled) {
+			&:hover {
+				background-color: var(--primary-hover);
+				color: var(--primary-hover-text-01);
+			}
+		}
+		&:disabled {
+			background-color: var(--primary-disabled);
+			color: var(--primary-disabled-text-01);
+			cursor: not-allowed;
+		}
 	}
 </style>

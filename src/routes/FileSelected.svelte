@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { environment } from '$lib/environment/index.js';
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import PaletteButton from '$lib/PaletteButton.svelte';
@@ -26,7 +25,9 @@
 
 <page-grid>
 	<page-sidebar>
-		<SidebarLink href="/" routeId="/">Tokens</SidebarLink>
+		<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
+
+		<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
 
 		<palettes-section>
 			<palette-header>
@@ -68,28 +69,32 @@
 				/>
 			{/each}
 		</palettes-section>
-
-		{#if environment === 'tauri'}
-			<SidebarLink href="/outputs" routeId="/outputs">Outputs</SidebarLink>
-		{/if}
 	</page-sidebar>
 
-	{@render children()}
+	<main>
+		{@render children()}
+	</main>
 </page-grid>
 
 <style>
 	page-grid {
 		display: grid;
-		grid-template-columns: auto 1fr;
+		grid-template-columns: 16rem 1fr;
 		height: 100%;
-		padding: var(--sp-06) var(--sp-05);
 	}
 
 	page-sidebar {
 		display: flex;
 		flex-direction: column;
 		gap: var(--sp-02);
-		width: 16rem;
+		overflow-y: auto;
+		padding: var(--sp-04) var(--sp-04);
+	}
+
+	main {
+		display: block;
+		height: 100%;
+		overflow-y: auto;
 	}
 
 	palettes-section {

@@ -5,6 +5,7 @@
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import RgbInputs from '$lib/RGBInputs.svelte';
+	import SidePanel from '$lib/SidePanel.svelte';
 	import { spec } from '$lib/spec.svelte.js';
 	import type { PageData } from './$types.js';
 	import ColorControl from './ColorControl.svelte';
@@ -36,10 +37,6 @@
 	afterNavigate(() => {
 		colorIndex = null;
 	});
-
-	$effect(() => {
-		console.log('page', spec);
-	});
 </script>
 
 {#if palette}
@@ -62,38 +59,40 @@
 			{/each}
 		</colors-section>
 
-		<colors-options>
-			<Button icon={Plus} onclick={add_color}>Add Color</Button>
-			{#if colorIndex != null}
-				{@const color = spec.palettes[data.idx].colors[colorIndex]}
-				<color-values-grid>
-					<span> RGB </span>
-					<RgbInputs
-						{color}
-						onchange={(color) => {
-							console.log('change', color);
-							spec.palettes[data.idx].colors[colorIndex!] = color;
-						}}
-					/>
-					<span> HSV </span>
-					<HsvInputs {color} />
-				</color-values-grid>
-				<Button
-					icon={Minus}
-					onclick={delete_color}
-					disabled={spec.palettes[data.idx].colors.length <= 1}
-				>
-					Delete Color
-				</Button>
-			{/if}
-		</colors-options>
+		<SidePanel>
+			<colors-options>
+				<Button icon={Plus} onclick={add_color}>Add Color</Button>
+				{#if colorIndex != null}
+					{@const color = spec.palettes[data.idx].colors[colorIndex]}
+					<color-values-grid>
+						<span> RGB </span>
+						<RgbInputs
+							{color}
+							onchange={(color) => {
+								spec.palettes[data.idx].colors[colorIndex!] = color;
+							}}
+						/>
+						<span> HSV </span>
+						<HsvInputs {color} />
+					</color-values-grid>
+					<Button
+						icon={Minus}
+						onclick={delete_color}
+						disabled={spec.palettes[data.idx].colors.length <= 1}
+					>
+						Delete Color
+					</Button>
+				{/if}
+			</colors-options>
+		</SidePanel>
 	</page-grid>
 {/if}
 
 <style>
 	page-grid {
 		display: grid;
-		grid-template-columns: 2fr 1fr;
+		grid-template-columns: 2fr auto;
+		height: 100%;
 	}
 
 	color-values-grid {
@@ -114,7 +113,7 @@
 
 	colors-section {
 		display: flex;
-		padding: 0 var(--sp-08);
+		padding: var(--sp-04) var(--sp-08);
 		height: 100%;
 		position: relative;
 	}
@@ -123,5 +122,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--sp-05);
+		padding: var(--sp-04) var(--sp-05);
 	}
 </style>

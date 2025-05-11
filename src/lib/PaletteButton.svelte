@@ -56,8 +56,9 @@
 		text-align: left;
 		background-color: inherit;
 
-		font-size: 1rem;
-		padding: var(--sp-02) var(--sp-02);
+		font-size: 0.9rem;
+		padding: var(--sp-02) 0;
+		padding-left: var(--sp-06);
 		padding-right: var(--sp-06);
 	}
 

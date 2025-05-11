@@ -1,53 +1,137 @@
 <script lang="ts">
-	import { reorderable } from '$lib';
 	import Button from '$lib/Button.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
-	import { spec } from '$lib/spec.svelte.js';
-	import TokenItem from './TokenItem.svelte';
+	import SidePanel from '$lib/SidePanel.svelte';
+	import { spec, type Token } from '$lib/spec.svelte.js';
+	import { onMount } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
+	import TokenGrid from './TokenGrid.svelte';
 
-	const reorder = reorderable(({ from, to }) => {
-		console.log('reorder', from, to);
-		spec.tokens.splice(to, 0, spec.tokens.splice(from, 1)[0]);
+	let selected = new SvelteMap<number, Token>();
+
+	type Group = {
+		name: string;
+		tokens: Token[];
+	};
+
+	function build_groups(): Group[] {
+		const ungrouped = spec.tokens.filter((t) =>
+			spec.token_groups.every((g) => !g.tokens.includes(t.id))
+		);
+		return [
+			{ name: '', tokens: ungrouped },
+			...spec.token_groups.map((g) => ({
+				name: g.name,
+				tokens: g.tokens.map((id) => spec.tokens.find((t) => t.id === id)!)
+			}))
+		].filter((g) => g.tokens.length > 0);
+	}
+
+	function remove_from_all_groups(tokens: Token[]) {
+		for (const g of groups) {
+			g.tokens = g.tokens.filter((t1) => !tokens.some((t2) => t1.id === t2.id));
+		}
+	}
+
+	let groups: Group[] = $state([]);
+	onMount(() => {
+		groups = build_groups();
 	});
 </script>
 
-<main>
-	<tokens-grid>
-		{#each spec.tokens as token, i}
-			<TokenItem
-				{token}
-				onchange={() => {
-					spec.tokens[i] = token;
+<page-grid>
+	<tokens-body>
+		{#each groups as g}
+			<h3>{g.name}</h3>
+			<TokenGrid
+				tokens={g.tokens}
+				onconsider={(tokens) => {
+					remove_from_all_groups(tokens);
+					g.tokens = tokens;
 				}}
-				ondelete={() => {
-					spec.tokens = spec.tokens.filter((_, j) => j !== i);
+				onfinalize={(tokens) => {
+					remove_from_all_groups(tokens);
+					g.tokens = tokens;
+
+					spec.tokens = groups.flatMap((g) => g.tokens);
+					spec.token_groups = groups
+						.map((g) => ({
+							name: g.name,
+							tokens: g.tokens.map((t) => t.id)
+						}))
+						.filter((g) => !!g.name && !!g.tokens.length);
+					groups = build_groups();
 				}}
+				{selected}
 			/>
 		{/each}
 
-		<span>
+		<token-actions>
+			<span>
+				<Button
+					onclick={() => {
+						spec.tokens.push({
+							id: Math.max(...spec.tokens.map((t) => t.id), 0) + 1,
+							name: 'New Token',
+							value: '#ffffff'
+						});
+					}}
+					icon={Plus}
+				>
+					Add Token
+				</Button>
+			</span>
+		</token-actions>
+	</tokens-body>
+
+	{#if selected.size > 0}
+		<SidePanel>
+			{selected.size} selected
+
 			<Button
 				onclick={() => {
-					spec.tokens.push({ name: 'New Token', value: '#ffffff' });
+					const tokens = [...selected.values()];
+					for (const g of spec.token_groups) {
+						g.tokens = g.tokens.filter((id) => !tokens.some((t2) => id === t2.id));
+					}
+					spec.token_groups.push({
+						name: 'New Group',
+						tokens: tokens.map((t) => t.id)
+					});
+					groups = build_groups();
+					selected.clear();
 				}}
 				icon={Plus}
 			>
-				Add Token
+				Group
 			</Button>
-		</span>
-	</tokens-grid>
-</main>
+		</SidePanel>
+	{/if}
+</page-grid>
 
 <style>
-	main {
-		padding: var(--sp-08);
+	page-grid {
+		display: grid;
+		grid-template-columns: 2fr auto;
+		height: 100%;
 	}
 
-	tokens-grid {
+	h3 {
+		margin-top: var(--sp-05);
+	}
+
+	tokens-body {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		column-gap: var(--sp-04);
-		row-gap: var(--sp-04);
+		padding: var(--sp-08);
+		position: relative;
+		overflow-y: auto;
+	}
+
+	token-actions {
+		position: fixed;
+		bottom: var(--sp-04);
+		right: var(--sp-04);
+		z-index: 10;
 	}
 </style>
