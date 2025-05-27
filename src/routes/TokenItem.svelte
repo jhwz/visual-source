@@ -15,10 +15,19 @@
 </script>
 
 <button
-	style="--color: {token.value}; --text: {rgb_to_hex(contrast_text_color(rgb))}"
+	style="--color: {value}; --text: {rgb_to_hex(contrast_text_color(rgb))}"
 	class={{ selected }}
 	{onclick}
+	draggable="true"
+	ondragstart={(e: DragEvent) => {
+		if (!e.dataTransfer) return;
+		e.dataTransfer.dropEffect = 'move';
+		e.dataTransfer.setData('text/plain', `token:${token.id}`);
+	}}
+	data-tokenid={token.id}
 >
+	<color-indicator></color-indicator>
+
 	<token-data>
 		<token-name>
 			{token.name}
@@ -36,25 +45,23 @@
 			{/if}
 		</token-link>
 	</token-data>
-
-	<input
-		type="color"
-		{value}
-		disabled
-		onchange={(e) => {
-			token.value = e.currentTarget.value;
-		}}
-	/>
 </button>
 
 <style>
+	:root {
+		--height: 3.5rem;
+		--padding: var(--sp-01);
+	}
 	button {
+		height: var(--height);
+
 		color: var(--text);
-		padding: var(--sp-01) var(--sp-03);
-		border-radius: 5px;
+		padding: var(--padding);
+		border-radius: 8px;
 		display: grid;
 		align-items: center;
-		grid-template-columns: 1fr auto;
+		grid-template-columns: auto 1fr;
+		column-gap: var(--sp-04);
 		border: 1px solid #ccc;
 		user-select: none;
 		width: 100%;
@@ -71,7 +78,6 @@
 	}
 	token-data {
 		display: grid;
-		padding: var(--sp-01) 0;
 	}
 
 	token-name {
@@ -95,8 +101,11 @@
 		}
 	}
 
-	input[type='color'] {
-		height: 3rem;
-		width: 5rem;
+	color-indicator {
+		display: block;
+		background-color: var(--color);
+		border-radius: 5px;
+		width: calc(var(--height) - 2 * var(--padding));
+		align-self: stretch;
 	}
 </style>

@@ -11,7 +11,7 @@ export type Spec = {
 	tokens: Token[];
 	token_groups: TokenGroup[];
 	spacing: {
-		values: string[];
+		scale: Token[];
 	};
 };
 
@@ -36,7 +36,7 @@ export const spec: Spec = $state({
 	palettes: [],
 	tokens: [],
 	token_groups: [],
-	spacing: { values: [] }
+	spacing: { scale: [] }
 });
 
 // Can't use top level await because of webkit bug. See
@@ -81,7 +81,7 @@ export type ResolvedSpec = {
 	palettes: Palette[];
 	tokens: ResolvedToken[];
 	spacing: {
-		values: string[];
+		scale: ResolvedToken[];
 	};
 };
 
@@ -89,5 +89,6 @@ export function resolved_spec(spec: Spec): ResolvedSpec {
 	const tokens = spec.tokens.map((token): ResolvedToken => {
 		return { name: token.name, value: token_value(token, spec) };
 	});
-	return { palettes: spec.palettes, tokens, spacing: spec.spacing };
+	const spacingTokens = spec.tokens.map((t) => ({ name: t.name, value: token_value(t, spec) }));
+	return { palettes: spec.palettes, tokens, spacing: { scale: spacingTokens } };
 }
