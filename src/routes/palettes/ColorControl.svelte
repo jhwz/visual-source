@@ -121,6 +121,8 @@
 		flex: 1;
 		cursor: default;
 		position: relative;
+		user-select: none;
+		-webkit-user-select: none;
 	}
 	color-control.selected {
 		z-index: 2;
@@ -145,6 +147,7 @@
 		font-size: 10px;
 		font-family: monospace;
 		user-select: none;
+		-webkit-user-select: none;
 
 		position: absolute;
 		border: 2px solid #000;

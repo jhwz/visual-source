@@ -4,12 +4,14 @@
 	import TokenItem from './TokenItem.svelte';
 
 	type Props = {
+		groupselected: boolean;
 		tokens: Token[];
 		ondrop: (id: number, targetID: number | null) => void;
+		ongroupdrop: (groupidx: number) => void;
 		selected: (t: Token) => boolean;
 		onclick: (t: Token) => void;
 	};
-	let { selected, tokens, ondrop, onclick }: Props = $props();
+	let { selected, tokens, ondrop, onclick, ongroupdrop, groupselected }: Props = $props();
 
 	const flipduration = 150;
 	let dragcount = $state(0);
@@ -17,7 +19,7 @@
 
 <tokens-grid
 	role="region"
-	class={{ dragging: dragcount > 0 }}
+	class={{ dragging: dragcount > 0, selected: groupselected }}
 	ondragover={(e: DragEvent) => {
 		e.preventDefault();
 	}}
@@ -30,19 +32,25 @@
 	ondrop={(e: DragEvent & { currentTarget: HTMLElement }) => {
 		dragcount = 0;
 		const data = e.dataTransfer?.getData('text/plain');
-		if (!data || !data.startsWith('token:')) return;
-		let target = e.target;
-		let targetID: number | null = null;
-		while (target && target instanceof HTMLElement && target !== e.currentTarget) {
-			if (target.dataset.tokenid) {
-				targetID = parseInt(target.dataset.tokenid);
-				break;
-			}
-			target = target.parentElement;
-		}
+		if (!data) return;
 
-		const id = parseInt(data.slice(6));
-		ondrop(id, targetID);
+		if (data.startsWith('group:')) {
+			const idx = parseInt(data.slice(6));
+			ongroupdrop(idx);
+		} else if (data.startsWith('token:')) {
+			let target = e.target;
+			let targetID: number | null = null;
+			while (target && target instanceof HTMLElement && target !== e.currentTarget) {
+				if (target.dataset.tokenid) {
+					targetID = parseInt(target.dataset.tokenid);
+					break;
+				}
+				target = target.parentElement;
+			}
+
+			const id = parseInt(data.slice(6));
+			ondrop(id, targetID);
+		}
 	}}
 >
 	{#each tokens as token (token.id)}
@@ -56,13 +64,18 @@
 <style>
 	tokens-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+		align-items: center;
+		grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
 		column-gap: var(--sp-04);
 		row-gap: var(--sp-04);
-		border: 1px solid black;
+		border: 1px solid var(--neutral-08);
+		border-radius: 10px;
 		padding: var(--sp-04);
 		&.dragging {
-			border-color: red;
+			border-color: var(--primary-hover);
+		}
+		&.selected {
+			border-color: var(--primary);
 		}
 	}
 </style>

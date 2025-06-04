@@ -20,7 +20,7 @@
 
 <style>
 	a {
-		color: #aaa;
+		color: var(--bg-text-02);
 		background-color: inherit;
 		padding: var(--sp-02) var(--sp-02);
 		padding-right: var(--sp-06);
@@ -31,11 +31,11 @@
 		cursor: pointer;
 
 		&.selected {
-			background-color: #444;
-			color: #ccc;
+			background-color: var(--bg-hover);
+			color: var(--bg-text-01);
 		}
 		&:not(:is(.selected, .editable)):hover {
-			color: #ccc;
+			color: var(--bg-text-01);
 		}
 	}
 </style>

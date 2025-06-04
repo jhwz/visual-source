@@ -17,14 +17,23 @@ export type Spec = {
 
 export type TokenGroup = {
 	name: string;
+	description?: string;
 	tokens: number[];
+	css?: {
+		prefix?: string;
+	};
 };
 
 export type Token = {
 	id: number;
 	name: string;
+	description?: string;
 	value?: string;
 	$ref?: $Ref;
+
+	css?: {
+		name?: string;
+	};
 };
 
 export type Palette = {
@@ -51,7 +60,6 @@ if (environment === 'tauri') {
 
 		$effect.root(() => {
 			$effect(() => {
-				console.log('spec changed');
 				write_spec_outputs();
 			});
 		});
@@ -59,6 +67,7 @@ if (environment === 'tauri') {
 }
 
 export async function write_spec_outputs() {
+	console.log('writing outputs');
 	await invoke('write', {
 		filename: 'manifest.json',
 		data: JSON.stringify(spec)

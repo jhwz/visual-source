@@ -3,8 +3,9 @@
 @import '../../../.visual-source/visual-source.css';
 
 :root {
-	--font-sans-serif: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
-		helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+	--font-sans-serif:
+		-apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica,
+		Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
 	--font-mono: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
 }
 
@@ -13,8 +14,8 @@ body {
 	font-size: 16px;
 	line-height: 1.5;
 	-webkit-font-smoothing: antialiased;
-	background-color: var(--background);
-	color: var(--background-text-01);
+	background-color: var(--bg);
+	color: var(--bg-text-01);
 	position: relative;
 }
 
@@ -36,4 +37,21 @@ button {
 	top: 0;
 	right: 5px;
 	margin: 0;
+}
+
+input,
+select,
+textarea {
+	background-color: var(--field);
+	color: var(--field-text);
+	border-radius: 5px;
+	border: 1px solid var(--field-border);
+	padding: var(--sp-0p5) var(--sp-01);
+	&:focus {
+		outline: 2px solid var(--primary);
+		outline-offset: 0px;
+	}
+	&:read-only {
+		color: var(--field-readonly-text);
+	}
 }

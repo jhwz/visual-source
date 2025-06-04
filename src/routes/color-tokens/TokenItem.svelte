@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { contrast_text_color, hex_to_rgb, rgb_to_hex } from '$lib/colors.js';
+	import { token_css_name } from '$lib/generate/css';
 	import Link from '$lib/icons/Link.svelte';
 	import { spec, token_value, type Token } from '$lib/spec.svelte.js';
 
@@ -33,17 +34,28 @@
 			{token.name}
 		</token-name>
 
-		<token-link class:linked={!!token.$ref}>
-			<Link size={14} />
-			{#if !token.$ref}
-				Link
-			{:else}
-				{@const parts = token.$ref.split('/')}
-				{@const palette = parseInt(parts[2])}
-				{@const color = parseInt(parts[4])}
-				{spec.palettes[palette].name} ({color + 1})
-			{/if}
-		</token-link>
+		<token-meta>
+			<css-name>
+				--{token_css_name(token, spec.token_groups)}
+			</css-name>
+			<token-link class:linked={!!token.$ref}>
+				{#if !token.$ref}
+					{token.value}
+				{:else}
+					{@const parts = token.$ref.split('/')}
+					{@const palette = parseInt(parts[2])}
+					{@const color = parseInt(parts[4])}
+					<Link size={14} />
+
+					{spec.palettes[palette].name} ({color + 1})
+				{/if}
+			</token-link>
+		</token-meta>
+		{#if token.description}
+			<token-desc>
+				{token.description}
+			</token-desc>
+		{/if}
 	</token-data>
 </button>
 
@@ -53,7 +65,7 @@
 		--padding: var(--sp-01);
 	}
 	button {
-		height: var(--height);
+		min-height: var(--height);
 
 		color: var(--text);
 		padding: var(--padding);
@@ -62,18 +74,18 @@
 		align-items: center;
 		grid-template-columns: auto 1fr;
 		column-gap: var(--sp-04);
-		border: 1px solid #ccc;
+		border: 1px solid var(--bg-border);
 		user-select: none;
 		width: 100%;
 
 		transition: border-color 0.12s ease;
 
 		&:hover {
-			border-color: rgb(var(--primary-background-rgb) / 0.3);
+			border-color: rgb(var(--primary-rgb) / 0.3);
 		}
 
 		&.selected {
-			border-color: var(--primary-background);
+			border-color: var(--primary);
 		}
 	}
 	token-data {
@@ -82,7 +94,7 @@
 
 	token-name {
 		background-color: inherit;
-		color: var(--background-text-01);
+		color: var(--bg-text-01);
 		text-align: left;
 		border: none;
 		white-space: nowrap;
@@ -97,8 +109,27 @@
 		gap: var(--sp-01);
 
 		&.linked {
-			color: #0a0;
+			color: var(--success);
 		}
+	}
+
+	css-name {
+		color: var(--bg-text-02);
+		font-size: x-small;
+		display: flex;
+		align-items: center;
+		gap: var(--sp-01);
+	}
+
+	token-desc {
+		text-align: left;
+		font-size: small;
+		color: var(--bg-text-01);
+	}
+
+	token-meta {
+		display: flex;
+		gap: var(--sp-04);
 	}
 
 	color-indicator {
@@ -106,6 +137,6 @@
 		background-color: var(--color);
 		border-radius: 5px;
 		width: calc(var(--height) - 2 * var(--padding));
-		align-self: stretch;
+		height: calc(var(--height) - 2 * var(--padding));
 	}
 </style>

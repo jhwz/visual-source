@@ -3,30 +3,27 @@
 	import Presets from './Presets.svelte';
 </script>
 
-<h3>Spacing</h3>
-<help-text>
-	<p>Manage the spacing tokens for your project</p>
-</help-text>
-
-{#if !spec.spacing.scale?.length}
-	<Presets />
-{:else}
-	<spacing-values>
-		<span>Name</span>
-		<span>Value</span>
-		<span></span>
-		{#each spec.spacing.scale as v}
-			<input type="text" bind:value={v.name} />
-			<input type="text" bind:value={v.value} />
-			<spacing-indicator style="width: {v.value};"></spacing-indicator>
-		{/each}
-	</spacing-values>
-{/if}
+<main>
+	{#if !spec.spacing.scale?.length}
+		<Presets />
+	{:else}
+		<spacing-values>
+			<span>Name</span>
+			<span>Value</span>
+			<span></span>
+			{#each spec.spacing.scale as v}
+				<input type="text" bind:value={v.name} />
+				<input type="text" bind:value={v.value} />
+				<spacing-indicator style="width: {v.value};"></spacing-indicator>
+			{/each}
+		</spacing-values>
+	{/if}
+</main>
 
 <style>
-	help-text {
-		margin-bottom: var(--sp-08);
+	main {
 		display: block;
+		padding: var(--sp-08) var(--sp-04);
 	}
 
 	spacing-values {
@@ -38,7 +35,7 @@
 	spacing-indicator {
 		display: block;
 		justify-self: stretch;
-		background-color: blue;
+		background-color: var(--primary);
 		margin: var(--sp-01);
 	}
 </style>

@@ -37,8 +37,6 @@
 		flex: 1;
 		width: 0;
 		border: none;
-		background-color: #3d3d44;
-		color: #fff;
 		padding: var(--sp-0p5) var(--sp-01);
 		max-width: 4rem;
 	}

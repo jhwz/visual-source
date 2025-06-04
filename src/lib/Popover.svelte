@@ -53,8 +53,8 @@
 	popover-content {
 		position: absolute;
 		z-index: 1;
-		background-color: #444;
-		color: #eee;
+		background-color: var(--bg);
+		color: var(--bg-text-01);
 		border-radius: 5px;
 		box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 	}

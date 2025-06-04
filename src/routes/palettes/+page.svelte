@@ -64,6 +64,7 @@
 				<Button icon={Plus} onclick={add_color}>Add Color</Button>
 				{#if colorIndex != null}
 					{@const color = spec.palettes[data.idx].colors[colorIndex]}
+					<color-index>{colorIndex + 1} / {spec.palettes[data.idx].colors.length}</color-index>
 					<color-values-grid>
 						<span> RGB </span>
 						<RgbInputs
@@ -79,6 +80,7 @@
 						icon={Minus}
 						onclick={delete_color}
 						disabled={spec.palettes[data.idx].colors.length <= 1}
+						type="error"
 					>
 						Delete Color
 					</Button>

@@ -25,6 +25,7 @@
 
 <page-grid>
 	<page-sidebar>
+		<app-name>Visual Source</app-name>
 		<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
 
 		<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
@@ -66,6 +67,7 @@
 					onchange={(name) => {
 						p.name = name;
 					}}
+					colors={p.colors}
 				/>
 			{/each}
 		</palettes-section>
@@ -91,6 +93,18 @@
 		padding: var(--sp-04) var(--sp-04);
 	}
 
+	app-name {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--sp-04) 0;
+		font-weight: bold;
+		margin-bottom: var(--sp-04);
+		border: 1px solid var(--bg-border);
+		border-radius: 10px;
+		font-size: large;
+	}
+
 	main {
 		display: block;
 		height: 100%;
@@ -105,21 +119,26 @@
 
 	palette-header {
 		display: flex;
-		color: #aaa;
+		color: var(--bg-text-02);
 		font-size: small;
+		font-weight: bold;
 		gap: var(--sp-02);
 		padding-bottom: var(--sp-02);
 		margin-bottom: var(--sp-02);
 		padding-left: var(--sp-02);
-		border-bottom: 1px solid #555;
-	}
-	button.add-palette {
-		margin-left: auto;
-	}
-	palette-header button {
-		color: #aaa;
-	}
-	palette-header button:hover {
-		color: #ccc;
+		border-bottom: 1px solid var(--bg-border);
+
+		.add-palette {
+			margin-left: auto;
+		}
+		button {
+			color: var(--bg-text-02);
+			padding: var(--sp-01);
+			border-radius: 7px;
+			&:hover {
+				background-color: var(--bg-hover);
+				color: var(--primary);
+			}
+		}
 	}
 </style>

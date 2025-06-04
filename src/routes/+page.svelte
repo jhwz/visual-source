@@ -1,43 +1,22 @@
 <script lang="ts">
 	import Button from '$lib/Button.svelte';
-	import FormField from '$lib/FormField.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import SidePanel from '$lib/SidePanel.svelte';
 	import { spec, type Token } from '$lib/spec.svelte.js';
-	import { onMount } from 'svelte';
-	import TokenColor from './TokenColor.svelte';
-	import TokenGrid from './TokenGrid.svelte';
+	import { build_groups } from './color-tokens/color_tokens';
+	import GroupSidebar from './color-tokens/GroupSidebar.svelte';
+	import TokenGrid from './color-tokens/TokenGrid.svelte';
+	import TokenSidebar from './color-tokens/TokenSidebar.svelte';
 
 	let selected: Token | number | null = $state(null);
 
-	type Group = {
-		name: string;
-		tokens: Token[];
-	};
-
-	function build_groups(): Group[] {
-		const ungrouped = spec.tokens.filter((t) =>
-			spec.token_groups.every((g) => !g.tokens.includes(t.id))
-		);
-		return [
-			{ name: '', tokens: ungrouped },
-			...spec.token_groups.map((g) => ({
-				name: g.name,
-				tokens: g.tokens.map((id) => spec.tokens.find((t) => t.id === id)!)
-			}))
-		];
-	}
-
-	let groups: Group[] = $state([]);
-	onMount(() => {
-		groups = build_groups();
-	});
+	let groups: ReturnType<typeof build_groups> = $state([]);
 	$effect(() => {
 		if (groups.length) {
 			spec.tokens = groups.flatMap((g) => g.tokens);
-			spec.token_groups = groups
-				.slice(1)
-				.map((g) => ({ name: g.name, tokens: g.tokens.map((t) => t.id) }));
+			spec.token_groups = groups.slice(1).map((g) => ({ ...g, tokens: g.tokens.map((t) => t.id) }));
+		} else {
+			groups = build_groups(spec);
 		}
 	});
 
@@ -46,13 +25,26 @@
 			g.tokens = g.tokens.filter((t1) => t1.id !== id);
 		}
 	}
+
+	function remove_empty_groups() {
+		for (let i = 1; i < groups.length; i++) {
+			if (!groups[i].tokens.length) {
+				groups.splice(i, 1);
+				i--;
+			}
+		}
+	}
 </script>
 
 <page-grid>
 	<!-- svelte-ignore a11y_click_events_have_key_events,a11y_no_static_element_interactions -->
 	<tokens-body
-		onclick={(e: MouseEvent) => {
-			if (e.currentTarget === e.target) {
+		onclick={(e: MouseEvent & { currentTarget: HTMLElement }) => {
+			console.log(e.currentTarget.contains(e.target as Node));
+			if (
+				e.currentTarget === e.target ||
+				(e.target instanceof HTMLElement && e.target.tagName === 'TOKEN-GROUP')
+			) {
 				selected = null;
 			}
 		}}
@@ -60,54 +52,93 @@
 		{#each groups as g, i}
 			{@const active = typeof selected === 'number' && selected === i}
 			{@const token_active = (t: Token) => typeof selected === 'object' && t.id === selected?.id}
-			<token-group>
-				{#if g.name}
-					<button
-						class={{ selected: active }}
-						onclick={() => {
-							if (active) selected = null;
-							else selected = i;
+			{#if i > 0 || g.tokens.length > 0}
+				<token-group>
+					{#if g.name}
+						<button
+							class={{ selected: active }}
+							onclick={() => {
+								if (active) selected = null;
+								else selected = i;
+							}}
+							ondragstart={(e: DragEvent) => {
+								if (!e.dataTransfer || i == 0) return;
+								e.dataTransfer.dropEffect = 'move';
+								e.dataTransfer.setData('text/plain', `group:${i}`);
+							}}
+							data-groupid={i}
+							draggable="true"
+						>
+							<h3>{g.name}</h3>
+						</button>
+						{#if g.description}
+							<p>{g.description}</p>
+						{/if}
+					{/if}
+					<TokenGrid
+						tokens={g.tokens}
+						selected={token_active}
+						onclick={(t) => {
+							if (token_active(t)) selected = null;
+							else selected = t;
 						}}
-					>
-						<h3>{g.name}</h3>
-					</button>
-				{/if}
-				<TokenGrid
-					tokens={g.tokens}
-					selected={token_active}
-					onclick={(t) => {
-						if (token_active(t)) selected = null;
-						else selected = t;
-					}}
-					ondrop={(id, targetID) => {
-						const token = spec.tokens.find((t) => t.id === id);
-						if (!token) return;
-						remove_token(id);
-						const index = g.tokens.findIndex((t) => t.id === targetID);
-						if (index >= 0) g.tokens.splice(index, 0, token);
-						else g.tokens.push(token);
-						for (let i = 1; i < groups.length; i++) {
-							if (!groups[i].tokens.length) {
-								groups.splice(i, 1);
-								i--;
+						groupselected={active}
+						ondrop={(id, targetID) => {
+							const token = spec.tokens.find((t) => t.id === id);
+							if (!token) return;
+							const index = g.tokens.findIndex((t) => t.id === targetID);
+							if (index >= 0) {
+								remove_token(id);
+								g.tokens.splice(index, 0, token);
+							} else if (!g.tokens.some((t) => t.id === id)) {
+								remove_token(id);
+								g.tokens.push(token);
 							}
-						}
+							remove_empty_groups();
+						}}
+						ongroupdrop={(idx) => {
+							if (i == 0) return;
+							groups.splice(i, 0, ...groups.splice(idx, 1));
+						}}
+					/>
+				</token-group>
+			{/if}
+		{/each}
+	</tokens-body>
+
+	<SidePanel>
+		{#if selected !== null}
+			{#if typeof selected === 'number'}
+				{@const idx = selected}
+				<GroupSidebar
+					bind:group={groups[selected]}
+					ontokenadd={() => {
+						groups[idx].tokens.push({
+							id: Math.max(...spec.tokens.map((t) => t.id), 0) + 1,
+							name: 'New Token',
+							value: '#ffffff'
+						});
+						selected = groups[idx].tokens.at(-1)!;
+					}}
+					ondelete={() => {
+						groups.splice(idx, 1);
+						selected = null;
 					}}
 				/>
-			</token-group>
-		{/each}
-
-		{#if !selected}
-			<token-actions>
-				<Button
-					onclick={() => {
-						groups.push({ name: 'New Group', tokens: [] });
-						selected = groups.length - 1;
+			{:else}
+				{@const token = selected}
+				<TokenSidebar
+					bind:token={selected}
+					groups={spec.token_groups}
+					ondelete={() => {
+						remove_token(token.id);
+						selected = null;
+						remove_empty_groups();
 					}}
-					icon={Plus}
-				>
-					Add Group
-				</Button>
+				/>
+			{/if}
+		{:else}
+			<no-selection-sidebar>
 				<Button
 					onclick={() => {
 						groups[0].tokens.push({
@@ -119,45 +150,21 @@
 					}}
 					icon={Plus}
 				>
-					Add Token
+					Create Token
 				</Button>
-			</token-actions>
+
+				<Button
+					onclick={() => {
+						groups.push({ name: 'New Group', tokens: [] });
+						selected = groups.length - 1;
+					}}
+					icon={Plus}
+				>
+					Create Group
+				</Button>
+			</no-selection-sidebar>
 		{/if}
-	</tokens-body>
-
-	{#if selected !== null}
-		{#if typeof selected === 'number'}
-			{@const group = groups[selected]}
-			<SidePanel>
-				<side-panel-content>
-					<FormField label="Name">
-						<input type="text" bind:value={group.name} />
-					</FormField>
-				</side-panel-content>
-			</SidePanel>
-		{:else}
-			{@const token = selected}
-			<SidePanel>
-				<side-panel-content>
-					<FormField label="Token Name">
-						<input type="text" bind:value={selected.name} />
-					</FormField>
-
-					<h3>Color</h3>
-					<TokenColor bind:token={selected} />
-
-					<Button
-						onclick={() => {
-							remove_token(token.id);
-							selected = null;
-						}}
-					>
-						Delete
-					</Button>
-				</side-panel-content>
-			</SidePanel>
-		{/if}
-	{/if}
+	</SidePanel>
 </page-grid>
 
 <style>
@@ -179,26 +186,28 @@
 		overflow-y: auto;
 	}
 
-	token-actions {
-		position: fixed;
-		bottom: var(--sp-04);
-		right: var(--sp-04);
-		z-index: 10;
-		display: flex;
-		gap: var(--sp-02);
-	}
-
 	token-group {
 		display: block;
 		button {
-			&.selected {
-				color: blue;
+			transition: color 0.15s ease;
+			&:hover {
+				color: rgb(var(--primary-hover-rgb) / 0.6);
 			}
+			&.selected {
+				color: var(--primary);
+			}
+		}
+		p {
+			color: var(--bg-text-02);
+			font-size: small;
+			margin-bottom: var(--sp-01);
 		}
 	}
 
-	side-panel-content {
-		display: block;
-		padding: var(--sp-04) var(--sp-03);
+	no-selection-sidebar {
+		padding: var(--sp-04);
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-04);
 	}
 </style>

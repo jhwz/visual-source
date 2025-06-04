@@ -4,9 +4,10 @@
 		selected: boolean;
 		onclick: () => void;
 		onchange: (s: string) => void;
+		colors: string[];
 	};
 
-	let { name, selected, onclick, onchange }: Props = $props();
+	let { name, selected, onclick, onchange, colors }: Props = $props();
 
 	let editable = $state(false);
 </script>
@@ -36,23 +37,29 @@
 			}
 		}}
 		class:selected
-		contenteditable={selected && editable ? 'true' : 'false'}
 	>
 		{name}
+
+		<colors-preview>
+			{#each colors as c}
+				<span style="--color: {c}"></span>
+			{/each}
+		</colors-preview>
 	</button>
 {/if}
 
 <style>
 	button,
 	input {
-		display: block;
+		display: flex;
 		width: 100%;
+		justify-content: space-between;
 
 		border: none;
 		border-radius: 5px;
 		cursor: pointer;
 
-		color: #aaa;
+		color: var(--bg-text-02);
 		text-align: left;
 		background-color: inherit;
 
@@ -63,22 +70,35 @@
 	}
 
 	input {
-		background-color: #333;
+		background-color: var(--field);
+		color: var(--field-text);
 	}
 
 	button {
 		user-select: none;
 
 		&.selected {
-			background-color: #444;
-			color: #ccc;
+			background-color: var(--bg-hover);
+			color: var(--bg-text-01);
+			&:hover {
+				cursor: text;
+			}
 		}
 		&:not(:is(.selected, .editable)):hover {
-			color: #ccc;
+			color: var(--bg-text-01);
 		}
-		&[contenteditable='true'] {
-			background-color: inherit;
-			border: 1px solid #444;
+
+		colors-preview {
+			display: flex;
+			width: 3rem;
+			height: 100%;
+			max-height: 1rem;
+			flex: 0 0 3rem;
+
+			span {
+				flex: 1;
+				background-color: var(--color);
+			}
 		}
 	}
 </style>
