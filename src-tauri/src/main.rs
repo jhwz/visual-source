@@ -62,13 +62,7 @@ fn run_init() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir(&path)?;
 
     // Write default specification to manifest.json
-    let manifest = r#"{
-    "palettes": [],
-	"tokens": [],
-	"spacing": {
-		"values": []
-	}
-}"#;
+    let manifest = r#"{}"#;
     fs::write(path.join(MANIFEST_FILENAME), manifest)?;
     Ok(())
 }

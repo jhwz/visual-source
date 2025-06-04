@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tailwindSpacing } from '$lib/data/tailwind-spacing';
+	import { tailwindSpacing } from '$lib/data/spacing';
 	import { spec } from '$lib/spec.svelte.js';
 
 	type Props = {};

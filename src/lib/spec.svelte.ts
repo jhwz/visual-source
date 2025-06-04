@@ -53,9 +53,11 @@ export const spec: Spec = $state({
 if (environment === 'tauri') {
 	invoke<string>('get').then((str) => {
 		const spec2: Spec = JSON.parse(str);
-		for (const [index, token] of (spec2.tokens || []).entries()) {
-			if (token.id == null) token.id = index + 1;
-		}
+		spec2.palettes ||= [];
+		spec2.tokens ||= [];
+		spec2.token_groups ||= [];
+		spec2.spacing ||= { scale: [] };
+		spec2.spacing.scale ||= [];
 		Object.assign(spec, spec2);
 
 		$effect.root(() => {

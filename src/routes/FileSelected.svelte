@@ -3,11 +3,13 @@
 	import { page } from '$app/stores';
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
+	import Modal from '$lib/Modal/Modal.svelte';
 	import PaletteButton from '$lib/PaletteButton.svelte';
 	import SidebarLink from '$lib/SidebarLink.svelte';
 	import { spec } from '$lib/spec.svelte.js';
 	import type { Snippet } from 'svelte';
 	import { fromStore } from 'svelte/store';
+	import WelcomeModal from './WelcomeModal.svelte';
 
 	type Props = {
 		children: Snippet;
@@ -21,7 +23,10 @@
 			return parseInt(pagerune.current.url.searchParams.get('idx')!);
 		return null;
 	});
+	
 </script>
+
+<WelcomeModal />
 
 <page-grid>
 	<page-sidebar>
