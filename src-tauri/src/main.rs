@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use clap::{Parser, Subcommand};
-use std::{fs, path::PathBuf, sync::Mutex};
+use std::{fs, path::PathBuf};
 
 #[derive(Parser)]
 #[command(

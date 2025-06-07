@@ -39,7 +39,7 @@
 						spec.color.palettes.push({
 							id,
 							name: `Palette ${spec.color.palettes.length + 1}`,
-							colors: []
+							colors: ['#ffffff']
 						});
 						goto(`/palettes?id=${id}`);
 					}}
