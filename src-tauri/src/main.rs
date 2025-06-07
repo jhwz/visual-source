@@ -10,13 +10,11 @@ use std::{fs, path::PathBuf};
     about,
     long_about = "Launch the Visual Source GUI.
 
-If you haven't done yet, run `visual-source init` to initialize Visual Source"
+If you haven't done so yet, run `visual-source init` to initialize Visual Source"
 )]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
-
-    dir: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]
@@ -29,36 +27,60 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match cli.command {
         Some(Commands::Init {}) => run_init()?,
-        None => run_gui(cli.dir)?,
+        None => run_gui()?,
     }
     Ok(())
 }
 
-fn find_visual_source_directory(root_dir: Option<PathBuf>) -> Option<PathBuf> {
-    let mut path = root_dir.unwrap_or_else(|| match std::env::var("VISUAL_SOURCE_ROOT") {
+fn current_dir() -> PathBuf {
+    match std::env::var("VISUAL_SOURCE_ROOT") {
         Ok(root) => PathBuf::from(root),
         Err(_) => std::env::current_dir().unwrap(),
-    });
+    }
+}
+
+fn find_visual_source_directory() -> Option<PathBuf> {
+    let currdir = current_dir();
+    let mut path = currdir.clone();
     loop {
         if path.join(VISUAL_SOURCE_DIR).exists() {
             return Some(path.join(VISUAL_SOURCE_DIR));
         }
         if !path.pop() {
-            return None;
+            break;
         }
     }
+    None
 }
 
-fn run_init() -> Result<(), Box<dyn std::error::Error>> {
-    let path = find_visual_source_directory(Option::None);
-    if let Some(path) = path {
-        if std::env::current_dir().unwrap() == path {
-            println!("Visual source already initialised");
-            return Ok(());
+fn prompt_to_init_visual_source() -> Option<PathBuf> {
+    // Visual source directory not found, see if we can find a sensible package
+    // root by looking for a node_modules directory
+    let mut path = current_dir().clone();
+    loop {
+        if path.join("node_modules").exists() {
+            // Prompt the user to see if they want to initialise visual source
+            let path_str = path.to_str().unwrap();
+            println!("Would you like to initialize Visual Source in {path_str}? [y/N]");
+            use std::io::{self, Write};
+            io::stdout().flush().unwrap();
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            if input.trim().to_lowercase() == "y" {
+                if init_visual_source(path.clone()).is_ok() {
+                    return Some(path.join(VISUAL_SOURCE_DIR));
+                }
+            }
+        }
+        if !path.pop() {
+            break;
         }
     }
-    // Create .visual-source directory
-    let path = std::env::current_dir().unwrap().join(VISUAL_SOURCE_DIR);
+    None
+}
+
+fn init_visual_source(dir: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let path = dir.join(VISUAL_SOURCE_DIR);
     fs::create_dir(&path)?;
 
     // Write default specification to manifest.json
@@ -67,14 +89,28 @@ fn run_init() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn run_init() -> Result<(), Box<dyn std::error::Error>> {
+    let path = find_visual_source_directory();
+    if let Some(path) = path {
+        if current_dir() == path {
+            println!("Visual source already initialised");
+            return Ok(());
+        }
+    }
+    init_visual_source(std::env::current_dir().unwrap())
+}
+
 const VISUAL_SOURCE_DIR: &str = ".visual-source";
 const MANIFEST_FILENAME: &str = "manifest.json";
 
-fn run_gui(root_dir: Option<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
-    let dir = find_visual_source_directory(root_dir);
+fn run_gui() -> Result<(), Box<dyn std::error::Error>> {
+    let mut dir = find_visual_source_directory();
     if dir.is_none() {
-        println!("Visual Source must be initialized; please run 'visual-source init'");
-        return Ok(());
+        dir = prompt_to_init_visual_source();
+        if dir.is_none() {
+            println!("Visual Source not initialized; see visual-source init");
+            return Ok(());
+        }
     }
 
     let state = AppState { dir: dir.unwrap() };
