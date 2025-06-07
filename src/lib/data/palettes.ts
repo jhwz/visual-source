@@ -1,6 +1,6 @@
 import type { Palette } from '$lib/spec.svelte';
 
-export const tailwindPalettes: Palette[] = [
+export const tailwindPalettes: Omit<Palette, 'id'>[] = [
 	{
 		name: 'Red',
 		colors: [
@@ -355,7 +355,7 @@ export const tailwindPalettes: Palette[] = [
 	}
 ];
 
-export const openColorPalettes: Palette[] = [
+export const openColorPalettes: Omit<Palette, 'id'>[] = [
 	{
 		name: 'Gray',
 		colors: [

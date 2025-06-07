@@ -23,12 +23,12 @@ export function generate_css(spec: Spec) {
 		css += `\t--${name}-rgb: ${rgb[0]} ${rgb[1]} ${rgb[2]};\n`;
 	}
 
-	for (const t of spec.tokens || []) {
-		append_color_token(token_css_name(t, spec.token_groups), token_value(t));
+	for (const t of spec.color.tokens || []) {
+		append_color_token(token_css_name(t, spec.color.groups), token_value(t));
 	}
 	css += '}\n\n';
 
-	for (const p of spec.palettes || []) {
+	for (const p of spec.color.palettes || []) {
 		css += `/* PALETTE ${p.name} */\n:root{\n`;
 		const prefix = kebabCase(p.name);
 		for (const [i, c] of p.colors.entries()) {

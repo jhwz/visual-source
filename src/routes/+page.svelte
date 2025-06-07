@@ -3,6 +3,7 @@
 	import Plus from '$lib/icons/Plus.svelte';
 	import SidePanel from '$lib/SidePanel.svelte';
 	import { spec, type Token } from '$lib/spec.svelte.js';
+	import { next_id } from '$lib/utils';
 	import { build_groups } from './color-tokens/color_tokens';
 	import GroupSidebar from './color-tokens/GroupSidebar.svelte';
 	import TokenGrid from './color-tokens/TokenGrid.svelte';
@@ -13,8 +14,8 @@
 	let groups: ReturnType<typeof build_groups> = $state([]);
 	$effect(() => {
 		if (groups.length) {
-			spec.tokens = groups.flatMap((g) => g.tokens);
-			spec.token_groups = groups.slice(1).map((g) => ({ ...g, tokens: g.tokens.map((t) => t.id) }));
+			spec.color.tokens = groups.flatMap((g) => g.tokens);
+			spec.color.groups = groups.slice(1).map((g) => ({ ...g, tokens: g.tokens.map((t) => t.id) }));
 		} else {
 			groups = build_groups(spec);
 		}
@@ -84,7 +85,7 @@
 						}}
 						groupselected={active}
 						ondrop={(id, targetID) => {
-							const token = spec.tokens.find((t) => t.id === id);
+							const token = spec.color.tokens.find((t) => t.id === id);
 							if (!token) return;
 							const index = g.tokens.findIndex((t) => t.id === targetID);
 							if (index >= 0) {
@@ -114,7 +115,7 @@
 					bind:group={groups[selected]}
 					ontokenadd={() => {
 						groups[idx].tokens.push({
-							id: Math.max(...spec.tokens.map((t) => t.id), 0) + 1,
+							id: Math.max(...spec.color.tokens.map((t) => t.id), 0) + 1,
 							name: 'New Token',
 							value: '#ffffff'
 						});
@@ -129,7 +130,7 @@
 				{@const token = selected}
 				<TokenSidebar
 					bind:token={selected}
-					groups={spec.token_groups}
+					groups={spec.color.groups}
 					ondelete={() => {
 						remove_token(token.id);
 						selected = null;
@@ -142,7 +143,7 @@
 				<Button
 					onclick={() => {
 						groups[0].tokens.push({
-							id: Math.max(...spec.tokens.map((t) => t.id), 0) + 1,
+							id: next_id(spec.color.tokens),
 							name: 'New Token',
 							value: '#ffffff'
 						});
@@ -155,7 +156,11 @@
 
 				<Button
 					onclick={() => {
-						groups.push({ name: 'New Group', tokens: [] });
+						groups.push({
+						id: next_id(groups),
+							name: 'New Group',
+							tokens: []
+						});
 						selected = groups.length - 1;
 					}}
 					icon={Plus}

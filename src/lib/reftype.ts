@@ -42,6 +42,8 @@ export function resolve_ref<T extends Record<string, unknown>>(spec: T, ref: $Re
 	const path = ref.slice(2).split('/');
 	let obj: any = spec;
 	for (const key of path) {
+	  
+	
 		obj = obj[key];
 	}
 	return obj;

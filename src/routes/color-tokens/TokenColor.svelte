@@ -12,7 +12,7 @@
 	};
 	let { token = $bindable() }: Props = $props();
 
-	let selectedPalette = $state<null | number>(null);
+	let selectedPaletteID = $state<null | number>(null);
 </script>
 
 {#if !token.$ref}
@@ -24,7 +24,7 @@
 
 <Popover
 	onclose={() => {
-		selectedPalette = null;
+		selectedPaletteID = null;
 	}}
 >
 	{#snippet trigger({ open })}
@@ -33,7 +33,7 @@
 			class:linked={!!token.$ref}
 			onclick={() => {
 				if (token.$ref) {
-					selectedPalette = parseInt(token.$ref.split('/')[2]);
+					selectedPaletteID = parseInt(token.$ref.split('/')[3]);
 				}
 				open();
 			}}
@@ -45,27 +45,28 @@
 				{@const parts = token.$ref.split('/')}
 				{@const palette = parseInt(parts[2])}
 				{@const color = parseInt(parts[4])}
-				{spec.palettes[palette].name} ({color + 1})
+				{spec.color.palettes[palette].name} ({color + 1})
 			{/if}
 		</button>
 	{/snippet}
 	{#snippet content({ close })}
 		<popover-content>
-			{#if selectedPalette != null}
+			{#if selectedPaletteID != null}
+				{@const palette = spec.color.palettes.find((p) => p.id === selectedPaletteID)!}
 				<button
 					class="on-back"
 					onclick={() => {
-						selectedPalette = null;
+						selectedPaletteID = null;
 					}}
 				>
 					<ArrowLeft /> Back
 				</button>
 
-				{#each spec.palettes[selectedPalette].colors as c, i}
+				{#each palette.colors as c, i}
 					<button
 						class="palette-color"
 						onclick={() => {
-							token.$ref = `#/palettes/${selectedPalette as number}/colors/${i}`;
+							token.$ref = `#/color/palettes/${palette.id}/colors/${i}`;
 							token.value = undefined;
 							close();
 						}}
@@ -75,11 +76,11 @@
 					</button>
 				{/each}
 			{:else}
-				{#each spec.palettes as p, i}
+				{#each spec.color.palettes as p}
 					<button
 						class="select-palette"
 						onclick={() => {
-							selectedPalette = i;
+							selectedPaletteID = p.id;
 						}}
 					>
 						{p.name}

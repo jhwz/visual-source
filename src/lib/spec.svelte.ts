@@ -7,15 +7,19 @@ import { resolve_ref, type $RefType } from './reftype.js';
 type $Ref = $RefType<Spec>;
 
 export type Spec = {
-	palettes: Palette[];
-	tokens: Token[];
-	token_groups: TokenGroup[];
+	version: 1;
+	color: {
+		palettes: Palette[];
+		tokens: Token[];
+		groups: TokenGroup[];
+	};
 	spacing: {
 		scale: Token[];
 	};
 };
 
 export type TokenGroup = {
+	id: number;
 	name: string;
 	description?: string;
 	tokens: number[];
@@ -37,14 +41,18 @@ export type Token = {
 };
 
 export type Palette = {
+	id: number;
 	name: string;
 	colors: string[];
 };
 
 export const spec: Spec = $state({
-	palettes: [],
-	tokens: [],
-	token_groups: [],
+	version: 1,
+	color: {
+		palettes: [],
+		tokens: [],
+		groups: []
+	},
 	spacing: { scale: [] }
 });
 
@@ -53,11 +61,17 @@ export const spec: Spec = $state({
 if (environment === 'tauri') {
 	invoke<string>('get').then((str) => {
 		const spec2: Spec = JSON.parse(str);
-		spec2.palettes ||= [];
-		spec2.tokens ||= [];
-		spec2.token_groups ||= [];
+		if (spec2.version !== 1) {
+			return;
+		}
+		spec2.color ||= {} as Spec['color'];
+		spec2.color.palettes ||= [];
+		spec2.color.tokens ||= [];
+		spec2.color.groups ||= [];
+
 		spec2.spacing ||= { scale: [] };
 		spec2.spacing.scale ||= [];
+
 		Object.assign(spec, spec2);
 
 		$effect.root(() => {
@@ -89,17 +103,30 @@ type ResolvedToken = Omit<Token, '$ref' | 'value' | 'id'> & {
 };
 
 export type ResolvedSpec = {
-	palettes: Palette[];
-	tokens: ResolvedToken[];
+	color: {
+		palettes: Palette[];
+		tokens: ResolvedToken[];
+		groups: TokenGroup[];
+	};
 	spacing: {
 		scale: ResolvedToken[];
 	};
 };
 
 export function resolved_spec(spec: Spec): ResolvedSpec {
-	const tokens = spec.tokens.map((token): ResolvedToken => {
+	const colorTokens = spec.color.tokens.map((token): ResolvedToken => {
 		return { name: token.name, value: token_value(token, spec) };
 	});
-	const spacingTokens = spec.tokens.map((t) => ({ name: t.name, value: token_value(t, spec) }));
-	return { palettes: spec.palettes, tokens, spacing: { scale: spacingTokens } };
+	const spacingTokens = spec.spacing.scale.map((t) => ({
+		name: t.name,
+		value: token_value(t, spec)
+	}));
+	return {
+		color: {
+			palettes: spec.color.palettes,
+			tokens: colorTokens,
+			groups: spec.color.groups
+		},
+		spacing: { scale: spacingTokens }
+	};
 }

@@ -36,7 +36,7 @@
 
 		<token-meta>
 			<css-name>
-				--{token_css_name(token, spec.token_groups)}
+				--{token_css_name(token, spec.color.groups)}
 			</css-name>
 			<token-link class:linked={!!token.$ref}>
 				{#if !token.$ref}
@@ -47,7 +47,7 @@
 					{@const color = parseInt(parts[4])}
 					<Link size={14} />
 
-					{spec.palettes[palette].name} ({color + 1})
+					{spec.color.palettes[palette].name} ({color + 1})
 				{/if}
 			</token-link>
 		</token-meta>

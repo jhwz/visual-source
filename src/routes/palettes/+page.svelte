@@ -7,29 +7,24 @@
 	import RgbInputs from '$lib/RGBInputs.svelte';
 	import SidePanel from '$lib/SidePanel.svelte';
 	import { spec } from '$lib/spec.svelte.js';
-	import type { PageData } from './$types.js';
+	import { find_by_id } from '$lib/utils.js';
+	import type { PageProps } from './$types.js';
 	import ColorControl from './ColorControl.svelte';
 
-	type Props = {
-		data: PageData;
-	};
-	let { data }: Props = $props();
-
-	let palette = $derived(spec.palettes[data.idx]);
+	let { data }: PageProps = $props();
+	let palette = $derived(find_by_id(spec.color.palettes, data.id));
 
 	function add_color() {
-		if (spec.palettes[data.idx].colors.length === 0) {
-			spec.palettes[data.idx].colors.push('#ffffff');
+		if (palette.colors.length === 0) {
+			palette.colors.push('#ffffff');
 		} else {
-			spec.palettes[data.idx].colors.push(spec.palettes[data.idx].colors.at(-1) as string);
+			palette.colors.push(palette.colors.at(-1)!);
 		}
 	}
 
 	function delete_color() {
-		spec.palettes[data.idx].colors = spec.palettes[data.idx].colors.filter(
-			(_, j) => j !== colorIndex
-		);
-		colorIndex = Math.min(Math.max(colorIndex! - 1, 0), spec.palettes[data.idx].colors.length - 1);
+		palette.colors = palette.colors.filter((_, j) => j !== colorIndex);
+		colorIndex = Math.min(Math.max(colorIndex! - 1, 0), palette.colors.length - 1);
 	}
 
 	let colorIndex: number | null = $state(null);
@@ -53,7 +48,7 @@
 						colorIndex = i;
 					}}
 					onchange={(color) => {
-						spec.palettes[data.idx].colors[i] = color;
+						palette.colors[i] = color;
 					}}
 				/>
 			{/each}
@@ -63,14 +58,14 @@
 			<colors-options>
 				<Button icon={Plus} onclick={add_color}>Add Color</Button>
 				{#if colorIndex != null}
-					{@const color = spec.palettes[data.idx].colors[colorIndex]}
-					<color-index>{colorIndex + 1} / {spec.palettes[data.idx].colors.length}</color-index>
+					{@const color = palette.colors[colorIndex]}
+					<color-index>{colorIndex + 1} / {palette.colors.length}</color-index>
 					<color-values-grid>
 						<span> RGB </span>
 						<RgbInputs
 							{color}
 							onchange={(color) => {
-								spec.palettes[data.idx].colors[colorIndex!] = color;
+								palette.colors[colorIndex!] = color;
 							}}
 						/>
 						<span> HSV </span>
@@ -79,7 +74,7 @@
 					<Button
 						icon={Minus}
 						onclick={delete_color}
-						disabled={spec.palettes[data.idx].colors.length <= 1}
+						disabled={palette.colors.length <= 1}
 						type="error"
 					>
 						Delete Color

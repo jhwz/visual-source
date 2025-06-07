@@ -4,15 +4,16 @@
 	import { tailwindSpacing } from '$lib/data/spacing';
 	import Modal from '$lib/Modal/Modal.svelte';
 	import { spec } from '$lib/spec.svelte';
+	import { next_id } from '$lib/utils';
 
 	type Props = {};
 	let {}: Props = $props();
 
 	let modal: Modal | undefined = $state();
 
-	$effect(() => {
-		modal?.open();
-	});
+	// $effect(() => {
+	// 	modal?.open();
+	// });
 
 	const steps = [
 		{ id: 'start', title: 'Welcome to Visual Source' },
@@ -48,7 +49,12 @@
 				<button
 					onclick={(e) => {
 						if (e.target instanceof HTMLAnchorElement) return;
-						spec.palettes = p.data;
+						for (const palette of p.data) {
+							spec.color.palettes.push({
+								...palette,
+								id: next_id(spec.color.palettes)
+							});
+						}
 						next();
 					}}
 				>
