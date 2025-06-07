@@ -2,6 +2,56 @@
 
 /* COLOR TOKENS */
 :root {
+	--success: #00aa00;
+	--success-rgb: 0 170 0;
+	--bg: #202429;
+	--bg-rgb: 32 36 41;
+	--bg-hover: #333941;
+	--bg-hover-rgb: 51 57 65;
+	--bg-border: #424953;
+	--bg-border-rgb: 66 73 83;
+	--bg-text-01: #e2e8ef;
+	--bg-text-01-rgb: 226 232 239;
+	--bg-text-02: #b6bec6;
+	--bg-text-02-rgb: 182 190 198;
+	--surface: #333941;
+	--surface-rgb: 51 57 65;
+	--surface-border: #58626e;
+	--surface-border-rgb: 88 98 110;
+	--surface-hover: #424953;
+	--surface-hover-rgb: 66 73 83;
+	--surface-text-01: #fbfdff;
+	--surface-text-01-rgb: 251 253 255;
+	--surface-text-02: #ced4da;
+	--surface-text-02-rgb: 206 212 218;
+	--primary: #b74e22;
+	--primary-rgb: 183 78 34;
+	--primary-hover: #d35f33;
+	--primary-hover-rgb: 211 95 51;
+	--primary-disabled: #f1aa82;
+	--primary-disabled-rgb: 241 170 130;
+	--primary-text-01: #fbe8de;
+	--primary-text-01-rgb: 251 232 222;
+	--primary-disabled-text-01: #f2d0bd;
+	--primary-disabled-text-01-rgb: 242 208 189;
+	--field: #424953;
+	--field-rgb: 66 73 83;
+	--field-text: #eff4fa;
+	--field-text-rgb: 239 244 250;
+	--field-border: #e2e8ef;
+	--field-border-rgb: 226 232 239;
+	--field-readonly-text: #959fa8;
+	--field-readonly-text-rgb: 149 159 168;
+	--error: #77130e;
+	--error-rgb: 119 19 14;
+	--error-text-01: #e2e8ef;
+	--error-text-01-rgb: 226 232 239;
+	--error-hover: #892827;
+	--error-hover-rgb: 137 40 39;
+	--error-disabled: #a8504f;
+	--error-disabled-rgb: 168 80 79;
+	--error-disabled-text-01: #d89f9c;
+	--error-disabled-text-01-rgb: 216 159 156;
 }
 
 /* PALETTE Neutral */

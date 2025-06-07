@@ -1,3 +1,5 @@
+import { find_by_id } from './utils';
+
 type Primitive = string | number | boolean | null | undefined;
 
 type DeepKeyof<T> = T extends Primitive
@@ -42,9 +44,11 @@ export function resolve_ref<T extends Record<string, unknown>>(spec: T, ref: $Re
 	const path = ref.slice(2).split('/');
 	let obj: any = spec;
 	for (const key of path) {
-	  
-	
-		obj = obj[key];
+		if (/^\d+$/.test(key) && Array.isArray(obj) && typeof obj[0] === 'object') {
+			obj = find_by_id(obj, parseInt(key));
+		} else {
+			obj = obj[key];
+		}
 	}
 	return obj;
 }

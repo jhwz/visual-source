@@ -74,6 +74,8 @@ if (environment === 'tauri') {
 
 		Object.assign(spec, spec2);
 
+		write_spec_outputs();
+
 		$effect.root(() => {
 			$effect(() => {
 				write_spec_outputs();

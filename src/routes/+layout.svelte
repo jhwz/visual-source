@@ -12,9 +12,9 @@
 
 	let { children }: LayoutProps = $props();
 
-	let paletteIndex = $derived.by(() => {
-		if (page.route.id === '/palettes' && page.url.searchParams.has('idx'))
-			return parseInt(page.url.searchParams.get('idx')!);
+	let paletteID = $derived.by(() => {
+		if (page.route.id === '/palettes' && page.url.searchParams.has('id'))
+			return parseInt(page.url.searchParams.get('id')!);
 		return null;
 	});
 </script>
@@ -46,11 +46,11 @@
 				>
 					<Plus />
 				</button>
-				{#if paletteIndex != null}
+				{#if paletteID != null}
 					<button
 						class="remove-palette"
 						onclick={() => {
-							spec.color.palettes = spec.color.palettes.filter((_, i) => i !== paletteIndex);
+							spec.color.palettes = spec.color.palettes.filter((p) => p.id !== paletteID);
 							goto('/');
 						}}
 					>
@@ -59,11 +59,11 @@
 				{/if}
 			</palette-header>
 
-			{#each spec.color.palettes as p, i}
+			{#each spec.color.palettes as p}
 				<PaletteButton
 					name={p.name}
-					selected={paletteIndex === i}
-					onclick={() => goto(`/palettes?idx=${i}`)}
+					selected={paletteID === p.id}
+					onclick={() => goto(`/palettes?id=${p.id}`)}
 					onchange={(name) => {
 						p.name = name;
 					}}
@@ -76,7 +76,7 @@
 	<main>
 		<svelte:boundary>
 			{@render children()}
-			{#snippet onerror(error, reset)}
+			{#snippet onerror(error)}
 				{error}
 			{/snippet}
 		</svelte:boundary>

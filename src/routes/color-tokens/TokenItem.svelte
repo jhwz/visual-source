@@ -3,6 +3,7 @@
 	import { token_css_name } from '$lib/generate/css';
 	import Link from '$lib/icons/Link.svelte';
 	import { spec, token_value, type Token } from '$lib/spec.svelte.js';
+	import { find_by_id } from '$lib/utils';
 
 	type Props = {
 		token: Token;
@@ -43,11 +44,11 @@
 					{token.value}
 				{:else}
 					{@const parts = token.$ref.split('/')}
-					{@const palette = parseInt(parts[2])}
-					{@const color = parseInt(parts[4])}
+					{@const paletteID = parseInt(parts[3])}
+					{@const color = parseInt(parts[5])}
 					<Link size={14} />
 
-					{spec.color.palettes[palette].name} ({color + 1})
+					{find_by_id(spec.color.palettes, paletteID).name} ({color + 1})
 				{/if}
 			</token-link>
 		</token-meta>
