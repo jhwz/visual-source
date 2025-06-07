@@ -4,6 +4,7 @@ Visual Source is an opionated GUI for managing your projects design tokens local
 
 It supports definings color palettes, color tokens, spacing tokens and more. Please note this is alpha software! It is a proof-of-concept I have found useful for my own projects, but there is still a lot to be done. Feedback and contributions are welcome.
 
+<img width="1465" alt="Screenshot 2025-06-07 at 11 54 16 PM" src="https://github.com/user-attachments/assets/ade38078-a2b5-4300-95fa-a9a696dc606b" />
 
 ### Why Visual Source?
 
