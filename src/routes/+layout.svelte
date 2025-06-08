@@ -5,7 +5,7 @@
 	import Plus from '$lib/icons/Plus.svelte';
 	import PaletteButton from '$lib/PaletteButton.svelte';
 	import SidebarLink from '$lib/SidebarLink.svelte';
-	import { spec } from '$lib/spec.svelte.js';
+	import { spec, write_spec_outputs } from '$lib/spec.svelte.js';
 	import { next_id } from '$lib/utils';
 	import type { LayoutProps } from './$types';
 	import WelcomeModal from './WelcomeModal.svelte';
@@ -17,9 +17,16 @@
 			return parseInt(page.url.searchParams.get('id')!);
 		return null;
 	});
+
+	let rerender = $state(0);
 </script>
 
-<WelcomeModal />
+<WelcomeModal
+	oncomplete={() => {
+		rerender++;
+		write_spec_outputs();
+	}}
+/>
 
 <page-grid>
 	<page-sidebar>
@@ -75,7 +82,10 @@
 
 	<main>
 		<svelte:boundary>
-			{@render children()}
+			<!-- Dirty hack to force this page to re-render -->
+			{#key rerender}
+				{@render children()}
+			{/key}
 			{#snippet onerror(error)}
 				{error}
 			{/snippet}

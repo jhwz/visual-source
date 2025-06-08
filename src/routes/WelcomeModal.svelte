@@ -11,8 +11,10 @@
 	import { next_id } from '$lib/utils';
 	import { onMount, type Component } from 'svelte';
 
-	type Props = {};
-	let {}: Props = $props();
+	type Props = {
+		oncomplete: () => void;
+	};
+	let { oncomplete }: Props = $props();
 
 	let modal: Modal | undefined = $state();
 
@@ -33,8 +35,12 @@
 	let step = $state(0);
 	let currentstep = $derived(steps[step]);
 	function next() {
-		if (step == steps.length - 1) modal?.close();
-		else step++;
+		if (step == steps.length - 1) {
+			oncomplete();
+			modal?.close();
+		} else {
+			step++;
+		}
 	}
 
 	const palettes = [

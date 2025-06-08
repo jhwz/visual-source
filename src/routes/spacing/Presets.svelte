@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tailwindSpacing } from '$lib/data/spacing';
 	import { spec } from '$lib/spec.svelte.js';
+	import { next_id } from '$lib/utils';
 
 	type Props = {};
 	let {}: Props = $props();
@@ -9,7 +10,12 @@
 <choose-preset-grid>
 	<button
 		onclick={() => {
-			spec.spacing.scale = tailwindSpacing;
+			for (const t of tailwindSpacing) {
+				spec.spacing.scale.push({
+					...t,
+					id: next_id(spec.spacing.scale)
+				});
+			}
 		}}
 	>
 		Tailwind

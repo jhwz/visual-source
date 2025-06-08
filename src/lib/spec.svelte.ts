@@ -85,7 +85,6 @@ if (environment === 'tauri') {
 }
 
 export async function write_spec_outputs() {
-	console.log('writing outputs');
 	await invoke('write', {
 		filename: 'manifest.json',
 		data: JSON.stringify(spec)

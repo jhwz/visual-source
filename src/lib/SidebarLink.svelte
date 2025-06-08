@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import type { Snippet } from 'svelte';
-	import { fromStore } from 'svelte/store';
 
 	type Props = {
 		children: Snippet;
@@ -10,8 +9,7 @@
 	};
 	let { children, href, routeId }: Props = $props();
 
-	let pagerune = fromStore(page);
-	let selected = $derived.by(() => pagerune.current.route.id === routeId);
+	let selected = $derived.by(() => page.route.id === routeId);
 </script>
 
 <a {href} class:selected>

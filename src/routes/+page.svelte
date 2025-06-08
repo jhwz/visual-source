@@ -13,7 +13,7 @@
 
 	let groups: ReturnType<typeof build_groups> = $state([]);
 	$effect(() => {
-		if (groups.length && groups[0].tokens.length) {
+		if (groups.length) {
 			spec.color.tokens = groups.flatMap((g) => g.tokens);
 			spec.color.groups = groups.slice(1).map((g) => ({ ...g, tokens: g.tokens.map((t) => t.id) }));
 		} else {
