@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/Button.svelte';
 	import { exampleColorTokens } from '$lib/data/colortokens';
-	import { openColorPalettes, tailwindPalettes } from '$lib/data/palettes';
+	import { openColorPalettes } from '$lib/data/palettes';
 	import { tailwindSpacing } from '$lib/data/spacing';
 	import LogoOpenColor from '$lib/icons/LogoOpenColor.svelte';
 	import LogoTailwind from '$lib/icons/LogoTailwind.svelte';
@@ -38,13 +38,13 @@
 	}
 
 	const palettes = [
-		{
-			title: 'Tailwind',
-			description: 'Palettes Tailwind provides by default',
-			link: 'https://tailwindcss.com/docs/colors',
-			data: tailwindPalettes,
-			logo: LogoTailwind
-		},
+		// {
+		// 	title: 'Tailwind',
+		// 	description: 'Palettes Tailwind provides by default',
+		// 	link: 'https://tailwindcss.com/docs/colors',
+		// 	data: tailwindPalettes,
+		// 	logo: LogoTailwind
+		// },
 		{
 			title: 'Open Color',
 			description: 'Palettes from the Open Color open-source color scheme',
