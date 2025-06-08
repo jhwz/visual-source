@@ -1,6 +1,6 @@
 import type { Token } from '$lib/spec.svelte';
 
-export const tailwindSpacing: Token[] = [
+export const tailwindSpacing: Omit<Token, "id">[] = [
 	{ name: 'sp-0p5', value: '2px' },
 	{ name: 'sp-01', value: '4px' },
 	{ name: 'sp-01p5', value: '6px' },
@@ -34,37 +34,4 @@ export const tailwindSpacing: Token[] = [
 	{ name: 'sp-72', value: '288px' },
 	{ name: 'sp-80', value: '320px' },
 	{ name: 'sp-96', value: '384px' }
-].map((v, i) => ({ ...v, id: i + 1 }));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+];

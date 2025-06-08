@@ -100,15 +100,19 @@ export function token_value(token: Token, specification?: Spec): string {
 	return resolve_ref(specification || spec, token.$ref) as string;
 }
 
-type ResolvedToken = Omit<Token, '$ref' | 'value' | 'id'> & {
+type ResolvedToken = Omit<Token, '$ref' | 'value'> & {
 	value: string;
+};
+
+type ResolvedTokenGroup = Omit<TokenGroup, 'tokens'> & {
+	tokens: ResolvedToken[];
 };
 
 export type ResolvedSpec = {
 	color: {
 		palettes: Palette[];
 		tokens: ResolvedToken[];
-		groups: TokenGroup[];
+		groups: ResolvedTokenGroup[];
 	};
 	spacing: {
 		scale: ResolvedToken[];
@@ -116,19 +120,22 @@ export type ResolvedSpec = {
 };
 
 export function resolved_spec(spec: Spec): ResolvedSpec {
-	const colorTokens = spec.color.tokens.map((token): ResolvedToken => {
-		return { name: token.name, value: token_value(token, spec) };
-	});
-	const spacingTokens = spec.spacing.scale.map((t) => ({
-		name: t.name,
-		value: token_value(t, spec)
-	}));
+	function resolved_token(t: Token): ResolvedToken {
+		return { id: t.id, name: t.name, value: token_value(t, spec) };
+	}
+
+	const colorTokens = spec.color.tokens.map(resolved_token);
 	return {
 		color: {
 			palettes: spec.color.palettes,
 			tokens: colorTokens,
-			groups: spec.color.groups
+			groups: spec.color.groups.map(
+				(g): ResolvedTokenGroup => ({
+					...g,
+					tokens: g.tokens.map((id) => colorTokens.find((t) => t.id === id)!)
+				})
+			)
 		},
-		spacing: { scale: spacingTokens }
+		spacing: { scale: spec.spacing.scale.map(resolved_token) }
 	};
 }

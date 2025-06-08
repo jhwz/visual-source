@@ -13,7 +13,7 @@
 
 	let groups: ReturnType<typeof build_groups> = $state([]);
 	$effect(() => {
-		if (groups.length) {
+		if (groups.length && groups[0].tokens.length) {
 			spec.color.tokens = groups.flatMap((g) => g.tokens);
 			spec.color.groups = groups.slice(1).map((g) => ({ ...g, tokens: g.tokens.map((t) => t.id) }));
 		} else {
@@ -41,7 +41,6 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events,a11y_no_static_element_interactions -->
 	<tokens-body
 		onclick={(e: MouseEvent & { currentTarget: HTMLElement }) => {
-			console.log(e.currentTarget.contains(e.target as Node));
 			if (
 				e.currentTarget === e.target ||
 				(e.target instanceof HTMLElement && e.target.tagName === 'TOKEN-GROUP')
@@ -157,7 +156,7 @@
 				<Button
 					onclick={() => {
 						groups.push({
-						id: next_id(groups),
+							id: next_id(groups),
 							name: 'New Group',
 							tokens: []
 						});
