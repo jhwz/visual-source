@@ -2,15 +2,14 @@
 	import Button from '$lib/Button.svelte';
 	import FormField from '$lib/FormField.svelte';
 	import { token_css_name } from '$lib/generate/css';
-	import type { Token, TokenGroup } from '$lib/spec.svelte';
+	import { spec, type Token } from '$lib/spec.svelte';
 	import TokenColor from './TokenColor.svelte';
 
 	type Props = {
 		token: Token;
 		ondelete: () => void;
-		groups: TokenGroup[];
 	};
-	let { token = $bindable(), ondelete, groups }: Props = $props();
+	let { token = $bindable(), ondelete }: Props = $props();
 </script>
 
 <side-panel-content>
@@ -28,7 +27,7 @@
 			<input
 				type="text"
 				spellcheck="false"
-				value={token_css_name(token, groups)}
+				value={token_css_name(token, spec.color.groups)}
 				onchange={(e) => {
 					const value = e.currentTarget.value;
 					if (!value && token.css) token.css.name = undefined;

@@ -43,9 +43,11 @@
 				Link
 			{:else}
 				{@const parts = token.$ref.split('/')}
-				{@const palette = parseInt(parts[2])}
-				{@const color = parseInt(parts[4])}
-				{spec.color.palettes[palette].name} ({color + 1})
+				{@const paletteId = parseInt(parts[3])}
+				{@const color = parseInt(parts[5])}
+				{@const palette = spec.color.palettes.find((p) => p.id === paletteId)}
+
+				{palette?.name || paletteId} ({color + 1})
 			{/if}
 		</button>
 	{/snippet}
