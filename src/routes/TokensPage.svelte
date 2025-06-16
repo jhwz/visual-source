@@ -1,14 +1,16 @@
 <script lang="ts">
+	import { autoscroller } from '$lib/autoscroller';
 	import Button from '$lib/Button.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import SidePanel from '$lib/SidePanel.svelte';
 	import type { Token } from '$lib/spec.svelte.js';
 	import { next_id } from '$lib/utils';
-	import { build_groups } from './color-tokens/color_tokens';
+	import type { build_groups } from './color-tokens/color_tokens';
 	import GroupSidebar from './color-tokens/GroupSidebar.svelte';
 	import TokenGrid from './color-tokens/TokenGrid.svelte';
 	import TokenSidebar from './color-tokens/TokenSidebar.svelte';
-	import { autoscroller } from '$lib/autoscroller';
+
+	let _ = autoscroller; // for some reason typescript can't see this import in the attachment..
 
 	type Groups = ReturnType<typeof build_groups>;
 	type Props = {
