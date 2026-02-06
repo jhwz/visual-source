@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { autoscroller } from '$lib/autoscroller';
 	import Button from '$lib/Button.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
@@ -19,7 +20,23 @@
 
 	let { groups: externalgroups = $bindable() }: Props = $props();
 
-	const groups = $state(externalgroups);
+	const groups: Groups = $state(externalgroups);
+
+	// Pull: when spec loads asynchronously, externalgroups updates but the
+	// one-time $state copy above doesn't. Detect new external data and sync it
+	// into local state. untrack on the local read is essential — without it,
+	// deleting the last token would trigger the condition and undo the delete
+	// (the push effect below hasn't updated spec yet at $effect.pre time).
+	$effect.pre(() => {
+		const ext = externalgroups;
+		const extTokens = ext.flatMap((g) => g.tokens).length;
+		if (extTokens > 0 && untrack(() => groups.flatMap((g) => g.tokens).length) === 0) {
+			groups.length = 0;
+			groups.push(...$state.snapshot(ext));
+		}
+	});
+
+	// Push: sync local mutations back to parent (triggers the bind setter)
 	$effect(() => {
 		externalgroups = groups;
 	});
