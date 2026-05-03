@@ -9,16 +9,33 @@
 
 	type Props = {
 		token: Token;
+		onchange?: (token: Token) => void;
 	};
-	let { token = $bindable() }: Props = $props();
+	let { token = $bindable(), onchange }: Props = $props();
+
+	function update(changes: Partial<Token>) {
+		if (onchange) {
+			onchange({ ...token, ...changes });
+		} else {
+			Object.assign(token, changes);
+		}
+	}
 
 	let selectedPaletteID = $state<null | number>(null);
 </script>
 
 {#if !token.$ref}
 	<manual-color>
-		<input type="color" bind:value={token.value} />
-		<input type="text" bind:value={token.value} />
+		<input
+			type="color"
+			value={token.value}
+			oninput={(e) => update({ value: e.currentTarget.value })}
+		/>
+		<input
+			type="text"
+			value={token.value}
+			oninput={(e) => update({ value: e.currentTarget.value })}
+		/>
 	</manual-color>
 {/if}
 
@@ -68,8 +85,10 @@
 					<button
 						class="palette-color"
 						onclick={() => {
-							token.$ref = `#/color/palettes/${palette.id}/colors/${i}`;
-							token.value = undefined;
+							update({
+								$ref: `#/color/palettes/${palette.id}/colors/${i}` as typeof token.$ref,
+								value: undefined
+							});
 							close();
 						}}
 					>
@@ -94,9 +113,10 @@
 						class="select-palette unlink"
 						onclick={() => {
 							const resolved = resolve_ref(spec, token.$ref!);
-							if (resolved) token.value = resolved as string;
-							else token.value = '#000000';
-							token.$ref = undefined;
+							update({
+								value: resolved ? (resolved as string) : '#000000',
+								$ref: undefined
+							});
 							close();
 						}}
 					>

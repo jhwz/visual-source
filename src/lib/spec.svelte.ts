@@ -7,7 +7,7 @@ import { resolve_ref, type $RefType } from './reftype.js';
 type $Ref = $RefType<Spec>;
 
 export type Spec = {
-	version: 1;
+	version: 2;
 	color: {
 		palettes: Palette[];
 		tokens: Token[];
@@ -16,6 +16,20 @@ export type Spec = {
 	spacing: {
 		scale: Token[];
 	};
+	themes: Theme[];
+};
+
+export type Theme = {
+	id: number;
+	name: string;
+	tokens: ThemeTokenOverride[];
+	spacing: ThemeTokenOverride[];
+};
+
+export type ThemeTokenOverride = {
+	tokenId: number;
+	value?: string;
+	$ref?: $Ref;
 };
 
 export type TokenGroup = {
@@ -47,21 +61,26 @@ export type Palette = {
 };
 
 export const spec: Spec = $state({
-	version: 1,
+	version: 2,
 	color: {
 		palettes: [],
 		tokens: [],
 		groups: []
 	},
-	spacing: { scale: [] }
+	spacing: { scale: [] },
+	themes: []
 });
 
 // Can't use top level await because of webkit bug. See
 // https://github.com/tauri-apps/tauri/discussions/9795.
 if (environment === 'tauri') {
 	invoke<string>('get').then((str) => {
-		const spec2: Spec = JSON.parse(str);
-		if (spec2.version !== 1) {
+		const spec2 = JSON.parse(str);
+		if (spec2.version === 1) {
+			spec2.version = 2;
+			spec2.themes = [];
+		}
+		if (spec2.version !== 2) {
 			return;
 		}
 		spec2.color ||= {} as Spec['color'];
@@ -71,6 +90,7 @@ if (environment === 'tauri') {
 
 		spec2.spacing ||= { scale: [] };
 		spec2.spacing.scale ||= [];
+		spec2.themes ||= [];
 
 		Object.assign(spec, spec2);
 
@@ -99,6 +119,24 @@ export function token_value(token: Token, specification?: Spec): string {
 	return resolve_ref(specification || spec, token.$ref) as string;
 }
 
+export function themed_token_value(
+	token: Token,
+	theme: Theme | null,
+	specification?: Spec
+): string {
+	if (theme) {
+		const override =
+			theme.tokens.find((o) => o.tokenId === token.id) ||
+			theme.spacing.find((o) => o.tokenId === token.id);
+		if (override) {
+			if (override.value) return override.value;
+			if (override.$ref)
+				return resolve_ref(specification || spec, override.$ref) as string;
+		}
+	}
+	return token_value(token, specification);
+}
+
 type ResolvedToken = Omit<Token, '$ref' | 'value'> & {
 	value: string;
 };
@@ -118,9 +156,9 @@ export type ResolvedSpec = {
 	};
 };
 
-export function resolved_spec(spec: Spec): ResolvedSpec {
+export function resolved_spec(spec: Spec, theme?: Theme | null): ResolvedSpec {
 	function resolved_token(t: Token): ResolvedToken {
-		return { id: t.id, name: t.name, value: token_value(t, spec) };
+		return { id: t.id, name: t.name, value: themed_token_value(t, theme ?? null, spec) };
 	}
 
 	const colorTokens = spec.color.tokens.map(resolved_token);

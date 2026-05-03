@@ -2,7 +2,8 @@
 	import { contrast_text_color, hex_to_rgb, rgb_to_hex } from '$lib/colors.js';
 	import { token_css_name } from '$lib/generate/css';
 	import Link from '$lib/icons/Link.svelte';
-	import { spec, token_value, type Token } from '$lib/spec.svelte.js';
+	import { spec, themed_token_value, type Token } from '$lib/spec.svelte.js';
+	import { activeTheme } from '$lib/theme-context.svelte.js';
 	import { find_by_id } from '$lib/utils';
 
 	type Props = {
@@ -12,13 +13,15 @@
 	};
 	let { token, onclick, selected }: Props = $props();
 
-	let value = $derived(token_value(token));
+	let theme = $derived(activeTheme());
+	let value = $derived(themed_token_value(token, theme));
 	let rgb = $derived(hex_to_rgb(value));
+	let isOverridden = $derived(theme?.tokens.some((o) => o.tokenId === token.id) ?? false);
 </script>
 
 <button
 	style="--color: {value}; --text: {rgb_to_hex(contrast_text_color(rgb))}"
-	class={{ selected }}
+	class={{ selected, overridden: isOverridden }}
 	{onclick}
 	draggable="true"
 	ondragstart={(e: DragEvent) => {
@@ -87,6 +90,10 @@
 
 		&.selected {
 			border-color: var(--primary);
+		}
+
+		&.overridden {
+			border-left: 3px solid var(--success);
 		}
 	}
 	token-data {

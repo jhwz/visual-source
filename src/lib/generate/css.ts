@@ -1,4 +1,5 @@
 import { hex_to_rgb } from '$lib/colors.js';
+import { resolve_ref } from '$lib/reftype.js';
 import { token_value, type Spec, type Token } from '$lib/spec.svelte.js';
 import { kebabCase } from 'change-case';
 
@@ -45,5 +46,29 @@ export function generate_css(spec: Spec) {
 		}
 		css += '}\n\n';
 	}
+
+	for (const theme of spec.themes || []) {
+		const selector = kebabCase(theme.name);
+		css += `/* THEME: ${theme.name} */\n[data-theme="${selector}"] {\n`;
+
+		for (const override of theme.tokens) {
+			const baseToken = spec.color.tokens.find((t) => t.id === override.tokenId);
+			if (!baseToken) continue;
+			const name = token_css_name(baseToken, spec.color.groups);
+			const value = override.value || (resolve_ref(spec, override.$ref!) as string);
+			append_color_token(name, value);
+		}
+
+		for (const override of theme.spacing) {
+			const baseToken = spec.spacing.scale.find((t) => t.id === override.tokenId);
+			if (!baseToken) continue;
+			const name = token_css_name(baseToken, []);
+			const value = override.value || (resolve_ref(spec, override.$ref!) as string);
+			css += `\t--${name}: ${value};\n`;
+		}
+
+		css += '}\n\n';
+	}
+
 	return css.trim();
 }

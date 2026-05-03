@@ -3,17 +3,18 @@ import { describe, it, expect, vi } from 'vitest'
 vi.mock('./environment/index.js', () => ({ environment: 'browser' }))
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 
-import { token_value, resolved_spec, type Spec, type Token } from './spec.svelte'
+import { token_value, themed_token_value, resolved_spec, type Spec, type Token, type Theme } from './spec.svelte'
 
 function make_spec(overrides?: Partial<Spec>): Spec {
 	return {
-		version: 1,
+		version: 2,
 		color: {
 			palettes: [],
 			tokens: [],
 			groups: []
 		},
 		spacing: { scale: [] },
+		themes: [],
 		...overrides
 	} as Spec
 }
@@ -81,5 +82,74 @@ describe('resolved_spec', () => {
 		})
 		const result = resolved_spec(spec)
 		expect(result.spacing.scale[0].value).toBe('4px')
+	})
+
+	it('uses theme overrides when theme is provided', () => {
+		const spec = make_spec({
+			color: {
+				palettes: [],
+				tokens: [
+					{ id: 1, name: 'bg', value: '#fff' },
+					{ id: 2, name: 'fg', value: '#000' }
+				],
+				groups: []
+			}
+		})
+		const theme: Theme = {
+			id: 1,
+			name: 'dark',
+			tokens: [{ tokenId: 1, value: '#111' }],
+			spacing: []
+		}
+		const result = resolved_spec(spec, theme)
+		expect(result.color.tokens[0].value).toBe('#111')
+		expect(result.color.tokens[1].value).toBe('#000')
+	})
+})
+
+describe('themed_token_value', () => {
+	it('returns base value when no theme', () => {
+		const t = { id: 1, name: 'x', value: '#aaa' } as Token
+		expect(themed_token_value(t, null)).toBe('#aaa')
+	})
+
+	it('returns override value when theme has override', () => {
+		const t = { id: 1, name: 'x', value: '#aaa' } as Token
+		const theme: Theme = {
+			id: 1,
+			name: 'dark',
+			tokens: [{ tokenId: 1, value: '#bbb' }],
+			spacing: []
+		}
+		expect(themed_token_value(t, theme)).toBe('#bbb')
+	})
+
+	it('falls back to base when no override in theme', () => {
+		const t = { id: 1, name: 'x', value: '#aaa' } as Token
+		const theme: Theme = {
+			id: 1,
+			name: 'dark',
+			tokens: [],
+			spacing: []
+		}
+		expect(themed_token_value(t, theme)).toBe('#aaa')
+	})
+
+	it('resolves override $ref', () => {
+		const spec = make_spec({
+			color: {
+				palettes: [{ id: 1, name: 'p', colors: ['#112233', '#445566'] }],
+				tokens: [],
+				groups: []
+			}
+		})
+		const t = { id: 1, name: 'x', value: '#aaa' } as Token
+		const theme: Theme = {
+			id: 1,
+			name: 'dark',
+			tokens: [{ tokenId: 1, $ref: '#/color/palettes/1/colors/1' as any }],
+			spacing: []
+		}
+		expect(themed_token_value(t, theme, spec)).toBe('#445566')
 	})
 })

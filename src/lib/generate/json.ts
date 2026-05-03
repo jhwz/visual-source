@@ -1,5 +1,16 @@
 import { resolved_spec, type Spec } from '$lib/spec.svelte';
 
 export function generate_json(spec: Spec) {
-	return JSON.stringify(resolved_spec(spec));
+	const base = resolved_spec(spec);
+
+	const themes: Record<string, { color: { tokens: any[] }; spacing: { scale: any[] } }> = {};
+	for (const theme of spec.themes || []) {
+		const resolved = resolved_spec(spec, theme);
+		themes[theme.name] = {
+			color: { tokens: resolved.color.tokens },
+			spacing: { scale: resolved.spacing.scale }
+		};
+	}
+
+	return JSON.stringify({ ...base, themes });
 }

@@ -8,13 +8,14 @@ import type { Spec, Token } from '$lib/spec.svelte'
 
 function make_spec(overrides?: Partial<Spec>): Spec {
 	return {
-		version: 1,
+		version: 2,
 		color: {
 			palettes: [],
 			tokens: [],
 			groups: []
 		},
 		spacing: { scale: [] },
+		themes: [],
 		...overrides
 	} as Spec
 }
@@ -81,5 +82,57 @@ describe('generate_css', () => {
 		expect(css).toContain('COLOR TOKENS')
 		expect(css).not.toContain('PALETTE')
 		expect(css).not.toContain('SPACING')
+	})
+
+	it('generates theme override blocks', () => {
+		const spec = make_spec({
+			color: {
+				palettes: [],
+				tokens: [{ id: 1, name: 'Background', value: '#ffffff' }],
+				groups: []
+			},
+			themes: [
+				{
+					id: 1,
+					name: 'Dark',
+					tokens: [{ tokenId: 1, value: '#000000' }],
+					spacing: []
+				}
+			]
+		})
+		const css = generate_css(spec)
+		expect(css).toContain('[data-theme="dark"]')
+		expect(css).toContain('--background: #000000;')
+	})
+
+	it('generates theme override for spacing', () => {
+		const spec = make_spec({
+			spacing: {
+				scale: [{ id: 1, name: 'Small', value: '0.5rem' }]
+			},
+			themes: [
+				{
+					id: 1,
+					name: 'Compact',
+					tokens: [],
+					spacing: [{ tokenId: 1, value: '0.25rem' }]
+				}
+			]
+		})
+		const css = generate_css(spec)
+		expect(css).toContain('[data-theme="compact"]')
+		expect(css).toContain('--small: 0.25rem;')
+	})
+
+	it('does not generate theme block when no themes exist', () => {
+		const spec = make_spec({
+			color: {
+				palettes: [],
+				tokens: [{ id: 1, name: 'Primary', value: '#ff0000' }],
+				groups: []
+			}
+		})
+		const css = generate_css(spec)
+		expect(css).not.toContain('data-theme')
 	})
 })

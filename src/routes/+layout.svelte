@@ -6,6 +6,7 @@
 	import PaletteButton from '$lib/PaletteButton.svelte';
 	import SidebarLink from '$lib/SidebarLink.svelte';
 	import { spec, write_spec_outputs } from '$lib/spec.svelte.js';
+	import ThemeSelector from '$lib/ThemeSelector.svelte';
 	import { next_id } from '$lib/utils';
 	import type { LayoutProps } from './$types';
 	import WelcomeModal from './WelcomeModal.svelte';
@@ -34,6 +35,8 @@
 		<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
 
 		<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
+
+		<ThemeSelector />
 
 		<palettes-section>
 			<palette-header>

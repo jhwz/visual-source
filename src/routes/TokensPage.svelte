@@ -4,7 +4,7 @@
 	import Button from '$lib/Button.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import SidePanel from '$lib/SidePanel.svelte';
-	import type { Token } from '$lib/spec.svelte.js';
+	import { spec, type Token } from '$lib/spec.svelte.js';
 	import { next_id } from '$lib/utils';
 	import type { build_groups } from './color-tokens/color_tokens';
 	import GroupSidebar from './color-tokens/GroupSidebar.svelte';
@@ -48,6 +48,10 @@
 	function remove_token(id: number) {
 		for (const g of groups) {
 			g.tokens = g.tokens.filter((t1) => t1.id !== id);
+		}
+		// Clean up theme overrides for this token
+		for (const theme of spec.themes) {
+			theme.tokens = theme.tokens.filter((o) => o.tokenId !== id);
 		}
 	}
 

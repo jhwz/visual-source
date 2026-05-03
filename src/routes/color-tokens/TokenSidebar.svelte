@@ -2,7 +2,8 @@
 	import Button from '$lib/Button.svelte';
 	import FormField from '$lib/FormField.svelte';
 	import { token_css_name } from '$lib/generate/css';
-	import { spec, type Token } from '$lib/spec.svelte';
+	import { spec, token_value, type Token, type ThemeTokenOverride } from '$lib/spec.svelte';
+	import { activeTheme } from '$lib/theme-context.svelte.js';
 	import TokenColor from './TokenColor.svelte';
 
 	type Props = {
@@ -10,6 +11,40 @@
 		ondelete: () => void;
 	};
 	let { token = $bindable(), ondelete }: Props = $props();
+
+	let theme = $derived(activeTheme());
+
+	let override = $derived.by((): ThemeTokenOverride | null => {
+		if (!theme) return null;
+		return theme.tokens.find((o) => o.tokenId === token.id) ?? null;
+	});
+
+	// A proxy token that reads/writes through the override when a theme is active
+	let editToken = $derived.by((): Token => {
+		if (!override) return token;
+		return {
+			id: token.id,
+			name: token.name,
+			description: token.description,
+			value: override.value,
+			$ref: override.$ref,
+			css: token.css
+		};
+	});
+
+	function create_override() {
+		if (!theme) return;
+		const value = token_value(token);
+		theme.tokens.push({
+			tokenId: token.id,
+			value
+		});
+	}
+
+	function clear_override() {
+		if (!theme) return;
+		theme.tokens = theme.tokens.filter((o) => o.tokenId !== token.id);
+	}
 </script>
 
 <side-panel-content>
@@ -40,10 +75,27 @@
 		</css-name>
 	</FormField>
 
-	<section>
-		<h3>Color</h3>
-		<TokenColor bind:token />
-	</section>
+	{#if theme}
+		<section>
+			<h3>Theme Override</h3>
+			{#if override}
+				<TokenColor token={editToken} onchange={(t) => {
+					if (!override) return;
+					override.value = t.value;
+					override.$ref = t.$ref;
+				}} />
+				<Button onclick={clear_override} type="error">Clear Override</Button>
+			{:else}
+				<p class="inherited">Using base value</p>
+				<Button onclick={create_override}>Override</Button>
+			{/if}
+		</section>
+	{:else}
+		<section>
+			<h3>Color</h3>
+			<TokenColor bind:token />
+		</section>
+	{/if}
 
 	<delete-token>
 		<Button onclick={ondelete} type="error">Delete</Button>
