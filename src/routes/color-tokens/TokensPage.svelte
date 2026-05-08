@@ -52,8 +52,9 @@
 			name: 'New Token',
 			value: '#ffffff'
 		};
-		groups[0].tokens.push(token);
-		selected = token;
+		const tokens = groups[0].tokens;
+		tokens.push(token);
+		selected = tokens[tokens.length - 1];
 	}
 
 	function add_group() {
@@ -184,8 +185,9 @@
 							name: 'New Token',
 							value: '#ffffff'
 						};
-						groups[idx].tokens.push(token);
-						selected = token;
+						const tokens = groups[idx].tokens;
+						tokens.push(token);
+						selected = tokens[tokens.length - 1];
 					}}
 					ondelete={() => {
 						groups.splice(idx, 1);
