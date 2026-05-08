@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('$lib/environment/index.js', () => ({ environment: 'browser' }))
-vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
+vi.mock('$lib/environment/index.js', () => ({
+	environment: 'browser',
+	storage: { load_manifest: async () => null, write_outputs: async () => {} }
+}))
 
 import { token_css_name, generate_css } from './css'
 import type { Spec, Token } from '$lib/spec.svelte'

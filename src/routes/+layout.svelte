@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import BrowserToolbar from '$lib/BrowserToolbar.svelte';
+	import { environment } from '$lib/environment/index.js';
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import PaletteButton from '$lib/PaletteButton.svelte';
@@ -81,6 +83,10 @@
 				/>
 			{/each}
 		</palettes-section>
+
+		{#if environment === 'browser'}
+			<BrowserToolbar />
+		{/if}
 	</page-sidebar>
 
 	<main>

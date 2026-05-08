@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('./environment/index.js', () => ({ environment: 'browser' }))
-vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
+vi.mock('./environment/index.js', () => ({
+	environment: 'browser',
+	storage: { load_manifest: async () => null, write_outputs: async () => {} }
+}))
 
 import { token_value, themed_token_value, resolved_spec, type Spec, type Token, type Theme } from './spec.svelte'
 
@@ -108,31 +110,19 @@ describe('resolved_spec', () => {
 })
 
 describe('themed_token_value', () => {
-	it('returns base value when no theme', () => {
+	it('returns base value when no overrides', () => {
 		const t = { id: 1, name: 'x', value: '#aaa' } as Token
 		expect(themed_token_value(t, null)).toBe('#aaa')
 	})
 
-	it('returns override value when theme has override', () => {
+	it('returns override value when overrides include this token', () => {
 		const t = { id: 1, name: 'x', value: '#aaa' } as Token
-		const theme: Theme = {
-			id: 1,
-			name: 'dark',
-			tokens: [{ tokenId: 1, value: '#bbb' }],
-			spacing: []
-		}
-		expect(themed_token_value(t, theme)).toBe('#bbb')
+		expect(themed_token_value(t, [{ tokenId: 1, value: '#bbb' }])).toBe('#bbb')
 	})
 
-	it('falls back to base when no override in theme', () => {
+	it('falls back to base when overrides do not include this token', () => {
 		const t = { id: 1, name: 'x', value: '#aaa' } as Token
-		const theme: Theme = {
-			id: 1,
-			name: 'dark',
-			tokens: [],
-			spacing: []
-		}
-		expect(themed_token_value(t, theme)).toBe('#aaa')
+		expect(themed_token_value(t, [])).toBe('#aaa')
 	})
 
 	it('resolves override $ref', () => {
@@ -144,12 +134,7 @@ describe('themed_token_value', () => {
 			}
 		})
 		const t = { id: 1, name: 'x', value: '#aaa' } as Token
-		const theme: Theme = {
-			id: 1,
-			name: 'dark',
-			tokens: [{ tokenId: 1, $ref: '#/color/palettes/1/colors/1' as any }],
-			spacing: []
-		}
-		expect(themed_token_value(t, theme, spec)).toBe('#445566')
+		const overrides = [{ tokenId: 1, $ref: '#/color/palettes/1/colors/1' as any }]
+		expect(themed_token_value(t, overrides, spec)).toBe('#445566')
 	})
 })

@@ -14,7 +14,7 @@
 	let { token, onclick, selected }: Props = $props();
 
 	let theme = $derived(activeTheme());
-	let value = $derived(themed_token_value(token, theme));
+	let value = $derived(themed_token_value(token, theme?.tokens ?? null));
 	let rgb = $derived(hex_to_rgb(value));
 	let isOverridden = $derived(theme?.tokens.some((o) => o.tokenId === token.id) ?? false);
 </script>

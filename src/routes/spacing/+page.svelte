@@ -45,7 +45,7 @@
 						class:overridden={!!override}
 						oninput={(e) => set_override_value(v.id, e.currentTarget.value)}
 					/>
-					<spacing-indicator style="width: {themed_token_value(v as any, theme)};"></spacing-indicator>
+					<spacing-indicator style="width: {themed_token_value(v as any, theme?.spacing ?? null)};"></spacing-indicator>
 					<button class="clear-btn" onclick={() => clear_override(v.id)}>
 						{#if override}&times;{/if}
 					</button>

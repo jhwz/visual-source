@@ -192,3 +192,7 @@
 	--sp-80: 320px;
 	--sp-96: 384px;
 }
+
+/* THEME: Light */
+[data-theme="light"] {
+}

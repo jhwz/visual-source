@@ -1,5 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
-import { environment } from './environment/index.js';
+import { storage } from './environment/index.js';
 import { generate_css } from './generate/css.js';
 import { generate_json } from './generate/json.js';
 import { resolve_ref, type $RefType } from './reftype.js';
@@ -73,44 +72,42 @@ export const spec: Spec = $state({
 
 // Can't use top level await because of webkit bug. See
 // https://github.com/tauri-apps/tauri/discussions/9795.
-if (environment === 'tauri') {
-	invoke<string>('get').then((str) => {
+storage.load_manifest().then((str) => {
+	if (str) {
 		const spec2 = JSON.parse(str);
 		if (spec2.version === 1) {
 			spec2.version = 2;
 			spec2.themes = [];
 		}
-		if (spec2.version !== 2) {
-			return;
+		if (spec2.version === 2) {
+			spec2.color ||= {} as Spec['color'];
+			spec2.color.palettes ||= [];
+			spec2.color.tokens ||= [];
+			spec2.color.groups ||= [];
+
+			spec2.spacing ||= { scale: [] };
+			spec2.spacing.scale ||= [];
+			spec2.themes ||= [];
+
+			Object.assign(spec, spec2);
 		}
-		spec2.color ||= {} as Spec['color'];
-		spec2.color.palettes ||= [];
-		spec2.color.tokens ||= [];
-		spec2.color.groups ||= [];
+	}
 
-		spec2.spacing ||= { scale: [] };
-		spec2.spacing.scale ||= [];
-		spec2.themes ||= [];
+	write_spec_outputs();
 
-		Object.assign(spec, spec2);
-
-		write_spec_outputs();
-
-		$effect.root(() => {
-			$effect(() => {
-				write_spec_outputs();
-			});
+	$effect.root(() => {
+		$effect(() => {
+			write_spec_outputs();
 		});
 	});
-}
+});
 
 export async function write_spec_outputs() {
-	await invoke('write', {
-		filename: 'manifest.json',
-		data: JSON.stringify(spec)
+	await storage.write_outputs({
+		manifest: JSON.stringify(spec),
+		css: generate_css(spec),
+		json: generate_json(spec)
 	});
-	await invoke('write', { filename: 'visual-source.css', data: generate_css(spec) });
-	await invoke('write', { filename: 'visual-source.json', data: generate_json(spec) });
 }
 
 export function token_value(token: Token, specification?: Spec): string {
@@ -121,13 +118,11 @@ export function token_value(token: Token, specification?: Spec): string {
 
 export function themed_token_value(
 	token: Token,
-	theme: Theme | null,
+	overrides: ThemeTokenOverride[] | null,
 	specification?: Spec
 ): string {
-	if (theme) {
-		const override =
-			theme.tokens.find((o) => o.tokenId === token.id) ||
-			theme.spacing.find((o) => o.tokenId === token.id);
+	if (overrides) {
+		const override = overrides.find((o) => o.tokenId === token.id);
 		if (override) {
 			if (override.value) return override.value;
 			if (override.$ref)
@@ -157,11 +152,15 @@ export type ResolvedSpec = {
 };
 
 export function resolved_spec(spec: Spec, theme?: Theme | null): ResolvedSpec {
-	function resolved_token(t: Token): ResolvedToken {
-		return { id: t.id, name: t.name, value: themed_token_value(t, theme ?? null, spec) };
+	function resolved_with(overrides: ThemeTokenOverride[] | null) {
+		return (t: Token): ResolvedToken => ({
+			id: t.id,
+			name: t.name,
+			value: themed_token_value(t, overrides, spec)
+		});
 	}
 
-	const colorTokens = spec.color.tokens.map(resolved_token);
+	const colorTokens = spec.color.tokens.map(resolved_with(theme?.tokens ?? null));
 	return {
 		color: {
 			palettes: spec.color.palettes,
@@ -173,6 +172,6 @@ export function resolved_spec(spec: Spec, theme?: Theme | null): ResolvedSpec {
 				})
 			)
 		},
-		spacing: { scale: spec.spacing.scale.map(resolved_token) }
+		spacing: { scale: spec.spacing.scale.map(resolved_with(theme?.spacing ?? null)) }
 	};
 }

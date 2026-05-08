@@ -25,7 +25,7 @@ export function generate_css(spec: Spec) {
 	}
 
 	for (const t of spec.color.tokens || []) {
-		append_color_token(token_css_name(t, spec.color.groups), token_value(t));
+		append_color_token(token_css_name(t, spec.color.groups), token_value(t, spec));
 	}
 	css += '}\n\n';
 
@@ -42,7 +42,7 @@ export function generate_css(spec: Spec) {
 	if (spec.spacing.scale?.length) {
 		css += `/* SPACING */\n:root{\n`;
 		for (const t of spec.spacing.scale || []) {
-			css += `\t--${token_css_name(t, [])}: ${token_value(t)};\n`;
+			css += `\t--${token_css_name(t, [])}: ${token_value(t, spec)};\n`;
 		}
 		css += '}\n\n';
 	}
