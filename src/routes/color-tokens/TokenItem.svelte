@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { contrast_text_color, hex_to_rgb, rgb_to_hex } from '$lib/colors.js';
+	import { hex_to_rgb } from '$lib/colors.js';
+	import CopyableText from '$lib/CopyableText.svelte';
 	import { token_css_name } from '$lib/generate/css';
 	import Link from '$lib/icons/Link.svelte';
+	import ListRow from '$lib/ListRow.svelte';
 	import { spec, themed_token_value, type Token } from '$lib/spec.svelte.js';
 	import { activeTheme } from '$lib/theme-context.svelte.js';
 	import { find_by_id } from '$lib/utils';
@@ -17,12 +19,23 @@
 	let value = $derived(themed_token_value(token, theme?.tokens ?? null));
 	let rgb = $derived(hex_to_rgb(value));
 	let isOverridden = $derived(theme?.tokens.some((o) => o.tokenId === token.id) ?? false);
+	let cssName = $derived(`--${token_css_name(token, spec.color.groups)}`);
+	let linked = $derived.by(() => {
+		if (!token.$ref) return null;
+		const parts = token.$ref.split('/');
+		const paletteID = parseInt(parts[3]);
+		const colorIndex = parseInt(parts[5]);
+		return {
+			name: find_by_id(spec.color.palettes, paletteID).name,
+			index: colorIndex + 1
+		};
+	});
 </script>
 
-<button
-	style="--color: {value}; --text: {rgb_to_hex(contrast_text_color(rgb))}"
-	class={{ selected, overridden: isOverridden }}
-	{onclick}
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<token-row
+	class:overridden={isOverridden}
+	style="--swatch-color: {value}; --swatch-rgb: {rgb[0]} {rgb[1]} {rgb[2]}"
 	draggable="true"
 	ondragstart={(e: DragEvent) => {
 		if (!e.dataTransfer) return;
@@ -31,120 +44,87 @@
 	}}
 	data-tokenid={token.id}
 >
-	<color-indicator></color-indicator>
-
-	<token-data>
-		<token-name>
-			{token.name}
-		</token-name>
-
-		<token-meta>
+	<ListRow {selected} {onclick}>
+		{#snippet leading()}
+			<color-swatch aria-hidden="true"></color-swatch>
+		{/snippet}
+		{#snippet title()}
+			<token-name>{token.name}</token-name>
+		{/snippet}
+		{#snippet subtitle()}
+			{#if value}
+				<hex-value>
+					<CopyableText value={value} label="Copy hex value" />
+				</hex-value>
+			{/if}
+			{#if linked}
+				<token-link>
+					<Link size={12} />
+					<span>{linked.name} ({linked.index})</span>
+				</token-link>
+			{/if}
 			<css-name>
-				--{token_css_name(token, spec.color.groups)}
+				<CopyableText value={cssName} label="Copy CSS variable name" />
 			</css-name>
-			<token-link class:linked={!!token.$ref}>
-				{#if !token.$ref}
-					{token.value}
-				{:else}
-					{@const parts = token.$ref.split('/')}
-					{@const paletteID = parseInt(parts[3])}
-					{@const color = parseInt(parts[5])}
-					<Link size={14} />
-
-					{find_by_id(spec.color.palettes, paletteID).name} ({color + 1})
-				{/if}
-			</token-link>
-		</token-meta>
-		{#if token.description}
-			<token-desc>
-				{token.description}
-			</token-desc>
-		{/if}
-	</token-data>
-</button>
+		{/snippet}
+	</ListRow>
+</token-row>
 
 <style>
-	:root {
-		--height: 3.5rem;
-		--padding: var(--sp-01);
+	token-row {
+		display: block;
+		position: relative;
+		border-radius: var(--radius-md);
 	}
-	button {
-		min-height: var(--height);
-
-		color: var(--text);
-		padding: var(--padding);
-		border-radius: 8px;
-		display: grid;
-		align-items: center;
-		grid-template-columns: auto 1fr;
-		column-gap: var(--sp-04);
-		border: 1px solid var(--bg-border);
-		user-select: none;
-		width: 100%;
-
-		transition: border-color 0.12s ease;
-
-		&:hover {
-			border-color: rgb(var(--primary-rgb) / 0.3);
-		}
-
-		&.selected {
-			border-color: var(--primary);
-		}
-
-		&.overridden {
-			border-left: 3px solid var(--success);
-		}
+	token-row.overridden::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 6px;
+		bottom: 6px;
+		width: 3px;
+		background-color: var(--success);
+		border-radius: 2px;
+		pointer-events: none;
 	}
-	token-data {
-		display: grid;
+
+	color-swatch {
+		display: block;
+		width: 28px;
+		height: 28px;
+		border-radius: var(--radius-sm);
+		background-color: var(--swatch-color);
+		box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
 	}
 
 	token-name {
-		background-color: inherit;
-		color: var(--bg-text-01);
-		text-align: left;
-		border: none;
+		display: inline-block;
+		color: var(--bg-text-02);
+		font-size: 0.85rem;
+		font-weight: 500;
+		line-height: 1.25;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		white-space: nowrap;
-		margin-right: var(--sp-04);
-		border-radius: 5px;
 	}
-	token-link {
-		color: #999;
-		font-size: x-small;
-		display: flex;
-		align-items: center;
-		gap: var(--sp-01);
 
-		&.linked {
-			color: var(--success);
-		}
+	hex-value :global(.copyable) {
+		color: var(--bg-text-01);
+		font-weight: 500;
 	}
 
 	css-name {
-		color: var(--bg-text-02);
-		font-size: x-small;
-		display: flex;
+		display: inline-flex;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	token-link {
+		display: inline-flex;
 		align-items: center;
 		gap: var(--sp-01);
-	}
-
-	token-desc {
-		text-align: left;
-		font-size: small;
-		color: var(--bg-text-01);
-	}
-
-	token-meta {
-		display: flex;
-		gap: var(--sp-04);
-	}
-
-	color-indicator {
-		display: block;
-		background-color: var(--color);
-		border-radius: 5px;
-		width: calc(var(--height) - 2 * var(--padding));
-		height: calc(var(--height) - 2 * var(--padding));
+		color: var(--success);
+		font-size: 0.75rem;
+		padding: var(--sp-0p5) var(--sp-01);
 	}
 </style>

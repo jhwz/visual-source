@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import BrowserToolbar from '$lib/BrowserToolbar.svelte';
+	import ConfirmDialog from '$lib/ConfirmDialog.svelte';
 	import { environment } from '$lib/environment/index.js';
+	import IconButton from '$lib/IconButton.svelte';
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import PaletteButton from '$lib/PaletteButton.svelte';
@@ -10,8 +12,8 @@
 	import { spec, write_spec_outputs } from '$lib/spec.svelte.js';
 	import ThemeSelector from '$lib/ThemeSelector.svelte';
 	import { next_id } from '$lib/utils';
+	import WelcomeModal from '$lib/WelcomeModal.svelte';
 	import type { LayoutProps } from './$types';
-	import WelcomeModal from './WelcomeModal.svelte';
 
 	let { children }: LayoutProps = $props();
 
@@ -21,7 +23,33 @@
 		return null;
 	});
 
+	let activePalette = $derived(
+		paletteID == null ? null : (spec.color.palettes.find((p) => p.id === paletteID) ?? null)
+	);
+
+	let confirmPaletteOpen = $state(false);
 	let rerender = $state(0);
+
+	function add_palette() {
+		const id = next_id(spec.color.palettes);
+		spec.color.palettes.push({
+			id,
+			name: `Palette ${spec.color.palettes.length + 1}`,
+			colors: ['#ffffff']
+		});
+		goto(`/palettes?id=${id}`);
+	}
+
+	function request_remove_palette() {
+		if (paletteID == null) return;
+		confirmPaletteOpen = true;
+	}
+
+	function remove_palette() {
+		if (paletteID == null) return;
+		spec.color.palettes = spec.color.palettes.filter((p) => p.id !== paletteID);
+		goto('/');
+	}
 </script>
 
 <WelcomeModal
@@ -34,54 +62,45 @@
 <page-grid>
 	<page-sidebar>
 		<app-name>Visual Source</app-name>
-		<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
 
-		<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
+		<sidebar-nav>
+			<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
+			<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
+		</sidebar-nav>
 
 		<ThemeSelector />
 
 		<palettes-section>
-			<palette-header>
-				Palettes
+			<sidebar-section-header>
+				<span>Palettes</span>
+				<header-actions>
+					<IconButton icon={Plus} label="Add palette" size="sm" onclick={add_palette} />
+					{#if activePalette}
+						<IconButton
+							icon={Minus}
+							label="Remove selected palette"
+							size="sm"
+							onclick={request_remove_palette}
+						/>
+					{/if}
+				</header-actions>
+			</sidebar-section-header>
 
-				<button
-					class="add-palette"
-					onclick={() => {
-						const id = next_id(spec.color.palettes);
-						spec.color.palettes.push({
-							id,
-							name: `Palette ${spec.color.palettes.length + 1}`,
-							colors: ['#ffffff']
-						});
-						goto(`/palettes?id=${id}`);
-					}}
-				>
-					<Plus />
-				</button>
-				{#if paletteID != null}
-					<button
-						class="remove-palette"
-						onclick={() => {
-							spec.color.palettes = spec.color.palettes.filter((p) => p.id !== paletteID);
-							goto('/');
+			{#if spec.color.palettes.length === 0}
+				<empty-state>No palettes yet — click + or import a preset.</empty-state>
+			{:else}
+				{#each spec.color.palettes as p}
+					<PaletteButton
+						name={p.name}
+						selected={paletteID === p.id}
+						onclick={() => goto(`/palettes?id=${p.id}`)}
+						onchange={(name) => {
+							p.name = name;
 						}}
-					>
-						<Minus />
-					</button>
-				{/if}
-			</palette-header>
-
-			{#each spec.color.palettes as p}
-				<PaletteButton
-					name={p.name}
-					selected={paletteID === p.id}
-					onclick={() => goto(`/palettes?id=${p.id}`)}
-					onchange={(name) => {
-						p.name = name;
-					}}
-					colors={p.colors}
-				/>
-			{/each}
+						colors={p.colors}
+					/>
+				{/each}
+			{/if}
 		</palettes-section>
 
 		{#if environment === 'browser'}
@@ -102,6 +121,17 @@
 	</main>
 </page-grid>
 
+<ConfirmDialog
+	bind:open={confirmPaletteOpen}
+	title="Delete palette?"
+	message={activePalette
+		? `Delete palette "${activePalette.name}"? This cannot be undone.`
+		: 'Delete this palette?'}
+	confirmLabel="Delete"
+	variant="destructive"
+	onconfirm={remove_palette}
+/>
+
 <style>
 	page-grid {
 		display: grid;
@@ -114,19 +144,23 @@
 		flex-direction: column;
 		gap: var(--sp-02);
 		overflow-y: auto;
-		padding: var(--sp-04) var(--sp-04);
+		padding: var(--sp-04);
 	}
 
 	app-name {
+		display: block;
+		padding: var(--sp-02) var(--sp-03);
+		margin-bottom: var(--sp-02);
+		font-weight: 600;
+		font-size: 1rem;
+		color: var(--bg-text-01);
+		letter-spacing: -0.01em;
+	}
+
+	sidebar-nav {
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: var(--sp-04) 0;
-		font-weight: bold;
-		margin-bottom: var(--sp-04);
-		border: 1px solid var(--bg-border);
-		border-radius: 10px;
-		font-size: large;
+		flex-direction: column;
+		gap: var(--sp-0p5);
 	}
 
 	main {
@@ -138,31 +172,36 @@
 	palettes-section {
 		display: flex;
 		flex-direction: column;
+		gap: var(--sp-0p5);
 		margin-top: var(--sp-02);
 	}
 
-	palette-header {
+	sidebar-section-header {
 		display: flex;
-		color: var(--bg-text-02);
-		font-size: small;
-		font-weight: bold;
+		align-items: center;
 		gap: var(--sp-02);
-		padding-bottom: var(--sp-02);
-		margin-bottom: var(--sp-02);
-		padding-left: var(--sp-02);
-		border-bottom: 1px solid var(--bg-border);
+		padding: var(--sp-01) var(--sp-02);
+		margin-bottom: var(--sp-01);
 
-		.add-palette {
-			margin-left: auto;
-		}
-		button {
-			color: var(--bg-text-02);
-			padding: var(--sp-01);
-			border-radius: 7px;
-			&:hover {
-				background-color: var(--bg-hover);
-				color: var(--primary);
-			}
-		}
+		color: var(--bg-text-02);
+		font-size: 0.7rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	header-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-0p5);
+		margin-left: auto;
+	}
+
+	empty-state {
+		display: block;
+		padding: var(--sp-02) var(--sp-03);
+		color: var(--bg-text-02);
+		font-size: 0.8rem;
+		line-height: 1.4;
 	}
 </style>

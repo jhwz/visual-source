@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Button from '$lib/Button.svelte';
+	import ConfirmDialog from '$lib/ConfirmDialog.svelte';
 	import FormField from '$lib/FormField.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
+	import Trash from '$lib/icons/Trash.svelte';
 	import type { BuiltTokenGroup } from './color_tokens';
 
 	type Props = {
@@ -10,6 +12,8 @@
 		ontokenadd: () => void;
 	};
 	let { group = $bindable(), ondelete, ontokenadd }: Props = $props();
+
+	let confirmDeleteOpen = $state(false);
 </script>
 
 <side-panel-content>
@@ -36,14 +40,31 @@
 		</FormField>
 	</section>
 
-	<Button onclick={ontokenadd} icon={Plus}>Add Token</Button>
+	<Button onclick={ontokenadd} icon={Plus} type="secondary">Add Token</Button>
 
 	{#if !group.tokens.length}
 		<delete-token>
-			<Button onclick={ondelete} type="error">Delete</Button>
+			<Button
+				onclick={() => {
+					confirmDeleteOpen = true;
+				}}
+				type="destructive"
+				size="sm"
+				icon={Trash}
+			>
+				Delete
+			</Button>
 		</delete-token>
 	{/if}
 </side-panel-content>
+
+<ConfirmDialog
+	bind:open={confirmDeleteOpen}
+	title="Delete group?"
+	message="Delete the '{group.name}' group? This can't be undone."
+	variant="destructive"
+	onconfirm={ondelete}
+/>
 
 <style>
 	side-panel-content {
@@ -57,8 +78,12 @@
 		margin-top: var(--sp-04);
 	}
 
+	section h3 {
+		margin: 0 0 var(--sp-02) 0;
+	}
+
 	delete-token {
-		display: block;
+		display: flex;
 		margin-top: auto;
 	}
 </style>

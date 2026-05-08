@@ -64,13 +64,13 @@
 <style>
 	tokens-grid {
 		display: grid;
-		align-items: center;
-		grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
-		column-gap: var(--sp-04);
-		row-gap: var(--sp-04);
-		border: 1px solid var(--neutral-08);
-		border-radius: 10px;
-		padding: var(--sp-04);
+		grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+		column-gap: var(--sp-02);
+		row-gap: var(--sp-01);
+		border: 1px solid var(--bg-border);
+		border-radius: var(--radius-lg);
+		padding: var(--sp-02);
+		transition: border-color 0.12s ease;
 		&.dragging {
 			border-color: var(--primary-hover);
 		}

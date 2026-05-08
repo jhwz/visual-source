@@ -6,11 +6,12 @@
 		prev: string | null;
 		next: string | null;
 		selected: boolean;
+		label: string;
 		onchange: (s: string) => void;
 		onclick: () => void;
 	};
 
-	let { color, selected, onchange, onclick, prev, next }: Props = $props();
+	let { color, selected, label, onchange, onclick, prev, next }: Props = $props();
 
 	let hsv = $state(rgb_to_hsv(hex_to_rgb(color)));
 	$effect(() => {
@@ -111,6 +112,8 @@
 			</color-line>
 		{/if}
 	{/each}
+
+	<color-label>{label}</color-label>
 </color-control>
 
 <style>
@@ -161,6 +164,26 @@
 
 		top: calc(var(--position) - 12px + 2%);
 		left: calc(50% - 12px);
+
+		cursor: grab;
+		touch-action: none;
+	}
+	color-handle:active {
+		cursor: grabbing;
+	}
+
+	color-label {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -1.75rem;
+		font-size: 0.7rem;
+		color: var(--bg-text-02);
+		font-variant-numeric: tabular-nums;
+		pointer-events: none;
 	}
 
 	:global(color-line-label) {

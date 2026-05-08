@@ -1,5 +1,6 @@
 @import './reset.css';
 @import './spacing.css';
+@import './tokens.css';
 @import '../../../.visual-source/visual-source.css';
 
 :root {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { spec } from '$lib/spec.svelte.js';
 	import { build_groups } from './color-tokens/color_tokens';
-	import TokensPage from './TokensPage.svelte';
+	import TokensPage from './color-tokens/TokensPage.svelte';
 </script>
 
 <TokensPage

@@ -1,0 +1,14 @@
+/* Design tokens — radii, control sizes, density */
+:root {
+	/* Border radii — 3-step scale auditing existing usage (5px, 7px, 8px, 10px) */
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 10px;
+
+	/* Button heights */
+	--button-height-sm: 1.5rem; /* 24px */
+	--button-height-md: 2rem; /* 32px */
+
+	/* List row baseline height */
+	--row-height: 2.75rem; /* 44px */
+}
