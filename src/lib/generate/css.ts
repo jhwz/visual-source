@@ -39,6 +39,25 @@ export function generate_css(spec: Spec) {
 		css += '}\n\n';
 	}
 
+	const context_groups = (spec.color.groups || []).filter((g) => g.context);
+	context_groups.forEach((group, i) => {
+		const prefix = group.css?.prefix ?? '';
+		if (!prefix) return;
+		const class_name = prefix.endsWith('-') ? prefix.slice(0, -1) : prefix;
+		const selector = i === 0 ? `:root, .${class_name}` : `.${class_name}`;
+		css += `/* CONTEXT: ${group.name} */\n${selector} {\n`;
+		for (const token_id of group.tokens) {
+			const token = spec.color.tokens.find((t) => t.id === token_id);
+			if (!token) continue;
+			const full_name = token_css_name(token, spec.color.groups);
+			if (!full_name.startsWith(prefix)) continue;
+			const local_name = full_name.slice(prefix.length);
+			css += `\t--${local_name}: var(--${full_name});\n`;
+			css += `\t--${local_name}-rgb: var(--${full_name}-rgb);\n`;
+		}
+		css += '}\n\n';
+	});
+
 	if (spec.spacing.scale?.length) {
 		css += `/* SPACING */\n:root{\n`;
 		for (const t of spec.spacing.scale || []) {

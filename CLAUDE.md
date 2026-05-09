@@ -50,10 +50,14 @@ Tokens use JSON-pointer-style `$ref` strings (e.g. `#/color/palettes/0/colors/5`
 
 ### Code Generation (`src/lib/generate/`)
 
-- **`css.ts`** — Generates CSS custom properties with both hex (`--token`) and RGB (`--token-rgb`) variants
+- **`css.ts`** — Generates CSS custom properties with both hex (`--token`) and RGB (`--token-rgb`) variants. Groups with `context: true` additionally emit a class block (`.bg`, `.surface`, …) aliasing prefixed tokens to unprefixed CSS variables; the first such group also applies to `:root`.
 - **`json.ts`** — Exports resolved token values as JSON
 
 Output goes to `.visual-source/visual-source.css` and `.visual-source/visual-source.json`.
+
+### Agent Instructions (`src/lib/agent-instructions.ts`)
+
+A single exported string (`AGENT_INSTRUCTIONS`) that the GUI writes to `.visual-source/AGENTS.md` and `.visual-source/CLAUDE.md` on save. This is the documentation that downstream-project agents (Claude Code, etc.) read when editing a consumer's `manifest.json` directly. It documents the schema, the editing workflow, the CLI commands, and the recommended authoring patterns (contextual grouping, context classes).
 
 ### Environment Abstraction (`src/lib/environment/`)
 
@@ -72,6 +76,23 @@ Three pages: color tokens (home), palettes, spacing. Layout in `+layout.svelte` 
 ### Presets (`src/lib/data/`)
 
 Ships with Tailwind CSS and Open Color palettes, plus Tailwind spacing scale as importable starting points.
+
+## Keeping agent instructions in sync
+
+`src/lib/agent-instructions.ts` is the source of truth for the per-project `AGENTS.md` / `CLAUDE.md` that ships into every consumer's `.visual-source/` directory. Downstream-project agents read these to understand how to edit `manifest.json` correctly. **It must stay in lockstep with the code.**
+
+When you change any of the following, update `agent-instructions.ts` in the same change:
+
+- The `Spec` / `Token` / `TokenGroup` / `Palette` / `Theme` types in `src/lib/spec.ts` — the schema section in the agent instructions documents these directly.
+- The set of fields a manifest entity accepts (e.g. adding `context?: boolean` to `TokenGroup` requires both a schema-line update and an explanation of the new behavior).
+- CSS / JSON generation behavior (`src/lib/generate/`) that a hand-editing agent needs to know about — e.g. new selectors, naming rules, or output sections.
+- CLI commands or flags exposed by `src-tauri/src/main.rs` — the *Editing workflow* and *Other CLI commands* sections list these.
+- Validation rules in `src/lib/validate.ts` if they affect what an agent must produce.
+- Recommended authoring patterns (e.g. the contextual grouping convention).
+
+Likewise update `README.md` if the change is user-facing enough to belong in the public concepts overview (e.g. a new authoring pattern), and confirm the existing docs for unchanged areas still read correctly after your edit.
+
+A change that ships new behavior without updating the agent instructions will silently mislead every consumer's agent. Treat the doc edit as part of the change, not a follow-up.
 
 ## Code Style
 

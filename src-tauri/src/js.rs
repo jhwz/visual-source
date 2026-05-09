@@ -1,7 +1,7 @@
-use rquickjs::{CatchResultExt, Context, Function, Runtime};
+use rquickjs::{CatchResultExt, Context, Function, Module, Persistent, Runtime};
 use serde::Deserialize;
 
-const BUNDLED_JS: &str = include_str!(concat!(env!("OUT_DIR"), "/generate.bundle.js"));
+const BUNDLED_JS: &str = include_str!(concat!(env!("OUT_DIR"), "/entry.bundle.mjs"));
 
 #[derive(Debug, Deserialize)]
 pub struct ValidationError {
@@ -28,45 +28,71 @@ struct GeneratedOutputs {
 }
 
 pub struct Js {
-    _runtime: Runtime,
+    // Field order matters: persistents must drop before context, context before runtime.
+    // Rust drops struct fields in declaration order.
+    validate_fn: Persistent<Function<'static>>,
+    generate_fn: Persistent<Function<'static>>,
     context: Context,
+    _runtime: Runtime,
 }
 
 impl Js {
     pub fn new() -> Result<Self, String> {
         let runtime = Runtime::new().map_err(|e| format!("quickjs runtime: {}", e))?;
         let context = Context::full(&runtime).map_err(|e| format!("quickjs context: {}", e))?;
-        context.with(|ctx| -> Result<(), String> {
-            ctx.eval::<(), _>(BUNDLED_JS)
-                .catch(&ctx)
-                .map_err(|e| format!("evaluating bundled script: {}", e))?;
-            Ok(())
-        })?;
+
+        let (validate_fn, generate_fn) =
+            context.with(|ctx| -> Result<(Persistent<Function<'static>>, Persistent<Function<'static>>), String> {
+                let declared = Module::declare(ctx.clone(), "vs", BUNDLED_JS)
+                    .catch(&ctx)
+                    .map_err(|e| format!("declaring bundled module: {}", e))?;
+                let (module, _promise) = declared
+                    .eval()
+                    .catch(&ctx)
+                    .map_err(|e| format!("evaluating bundled module: {}", e))?;
+
+                let validate: Function = module
+                    .get("validate")
+                    .map_err(|e| format!("missing `validate` export: {}", e))?;
+                let generate: Function = module
+                    .get("generate")
+                    .map_err(|e| format!("missing `generate` export: {}", e))?;
+
+                Ok((Persistent::save(&ctx, validate), Persistent::save(&ctx, generate)))
+            })?;
+
         Ok(Js {
-            _runtime: runtime,
+            validate_fn,
+            generate_fn,
             context,
+            _runtime: runtime,
         })
     }
 
     pub fn validate(&self, spec_str: &str) -> Result<ValidateResult, String> {
-        let result_json = self.call("__vs_validate", spec_str)?;
-        serde_json::from_str(&result_json)
+        let result = self.call(&self.validate_fn, "validate", spec_str)?;
+        serde_json::from_str(&result)
             .map_err(|e| format!("validator returned invalid JSON: {}", e))
     }
 
     pub fn generate(&self, spec_str: &str) -> Result<(String, String), String> {
-        let result_json = self.call("__vs_generate", spec_str)?;
-        let outputs: GeneratedOutputs = serde_json::from_str(&result_json)
+        let result = self.call(&self.generate_fn, "generate", spec_str)?;
+        let outputs: GeneratedOutputs = serde_json::from_str(&result)
             .map_err(|e| format!("generator returned invalid JSON: {}", e))?;
         Ok((outputs.css, outputs.json))
     }
 
-    fn call(&self, name: &str, arg: &str) -> Result<String, String> {
+    fn call(
+        &self,
+        handle: &Persistent<Function<'static>>,
+        name: &str,
+        arg: &str,
+    ) -> Result<String, String> {
         self.context.with(|ctx| -> Result<String, String> {
-            let func: Function = ctx
-                .globals()
-                .get(name)
-                .map_err(|e| format!("bundled script did not define {}: {}", name, e))?;
+            let func = handle
+                .clone()
+                .restore(&ctx)
+                .map_err(|e| format!("restoring {}: {}", name, e))?;
             let result: String = func
                 .call((arg,))
                 .catch(&ctx)

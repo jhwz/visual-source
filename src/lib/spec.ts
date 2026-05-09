@@ -33,6 +33,7 @@ export type TokenGroup = {
 	name: string;
 	description?: string;
 	tokens: number[];
+	context?: boolean;
 	css?: {
 		prefix?: string;
 	};

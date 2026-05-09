@@ -2,7 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use clap::{Parser, Subcommand};
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, process};
+
+mod js;
 
 #[derive(Parser)]
 #[command(
@@ -21,14 +23,118 @@ struct Cli {
 enum Commands {
     #[command(author, about = "Initializes Visual Source in the current directory")]
     Init {},
+    #[command(about = "Validates manifest.json schema and reference integrity")]
+    Validate {},
+    #[command(about = "Regenerates visual-source.css and visual-source.json from manifest.json")]
+    Regenerate {
+        #[arg(long, help = "Skip validation before regenerating")]
+        skip_validate: bool,
+    },
+    #[command(about = "Prints manifest.json to stdout (pretty-printed)")]
+    Show {},
+    #[command(about = "Prints the absolute path to manifest.json")]
+    Path {},
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match cli.command {
         Some(Commands::Init {}) => run_init()?,
+        Some(Commands::Validate {}) => run_validate()?,
+        Some(Commands::Regenerate { skip_validate }) => run_regenerate(skip_validate)?,
+        Some(Commands::Show {}) => run_show()?,
+        Some(Commands::Path {}) => run_path()?,
         None => run_gui()?,
     }
+    Ok(())
+}
+
+fn require_visual_source_dir() -> PathBuf {
+    match find_visual_source_directory() {
+        Some(dir) => dir,
+        None => {
+            eprintln!(
+                "Visual Source not initialized in this directory tree. Run `visual-source init`."
+            );
+            process::exit(1);
+        }
+    }
+}
+
+fn read_manifest(dir: &PathBuf) -> Result<String, Box<dyn std::error::Error>> {
+    let manifest_path = dir.join(MANIFEST_FILENAME);
+    fs::read_to_string(&manifest_path)
+        .map_err(|e| format!("failed to read {}: {}", manifest_path.display(), e).into())
+}
+
+fn run_validate() -> Result<(), Box<dyn std::error::Error>> {
+    let dir = require_visual_source_dir();
+    let spec_str = read_manifest(&dir)?;
+
+    let runtime = js::Js::new().map_err(|e| format!("validate failed: {}", e))?;
+    let result = runtime
+        .validate(&spec_str)
+        .map_err(|e| format!("validate failed: {}", e))?;
+
+    for w in &result.warnings {
+        eprintln!("warning {}", w);
+    }
+    if result.errors.is_empty() {
+        return Ok(());
+    }
+    for e in &result.errors {
+        eprintln!("{}", e);
+    }
+    eprintln!("\n{} validation error(s)", result.errors.len());
+    process::exit(1);
+}
+
+fn run_regenerate(skip_validate: bool) -> Result<(), Box<dyn std::error::Error>> {
+    let dir = require_visual_source_dir();
+    let spec_str = read_manifest(&dir)?;
+
+    let runtime = js::Js::new().map_err(|e| format!("regenerate failed: {}", e))?;
+
+    if !skip_validate {
+        let result = runtime
+            .validate(&spec_str)
+            .map_err(|e| format!("regenerate failed: {}", e))?;
+        for w in &result.warnings {
+            eprintln!("warning {}", w);
+        }
+        if !result.errors.is_empty() {
+            for e in &result.errors {
+                eprintln!("{}", e);
+            }
+            eprintln!(
+                "\n{} validation error(s); refusing to regenerate. Use --skip-validate to override.",
+                result.errors.len()
+            );
+            process::exit(1);
+        }
+    }
+
+    let (css, json) = runtime
+        .generate(&spec_str)
+        .map_err(|e| format!("regenerate failed: {}", e))?;
+
+    fs::write(dir.join("visual-source.css"), css)?;
+    fs::write(dir.join("visual-source.json"), json)?;
+    Ok(())
+}
+
+fn run_show() -> Result<(), Box<dyn std::error::Error>> {
+    let dir = require_visual_source_dir();
+    let spec_str = read_manifest(&dir)?;
+    let spec: serde_json::Value = serde_json::from_str(&spec_str)
+        .map_err(|e| format!("manifest.json is not valid JSON: {}", e))?;
+    println!("{}", serde_json::to_string_pretty(&spec)?);
+    Ok(())
+}
+
+fn run_path() -> Result<(), Box<dyn std::error::Error>> {
+    let dir = require_visual_source_dir();
+    println!("{}", dir.join(MANIFEST_FILENAME).display());
     Ok(())
 }
 

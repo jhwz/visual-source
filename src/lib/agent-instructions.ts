@@ -26,6 +26,42 @@ Every entity (palette, token, group, theme) needs a numeric \`id\` that's unique
 - \`visual-source show\` — pretty-print \`manifest.json\` to stdout.
 - \`visual-source path\` — print the absolute path of \`manifest.json\`.
 
+## Recommended structure
+
+The intended way to organize tokens with this tool is **contextual grouping with context classes**. Follow this unless you have a clear reason not to.
+
+1. Define one group per UI surface or semantic context: \`Background\`, \`Surface\`, \`Primary\`, \`Field\`, \`Error\`, etc.
+2. Inside each group, define the same set of role tokens — \`Text 01\`, \`Text 02\`, \`Border\`, \`Hover\`, \`Disabled\`, … — as needed for that context. Use **consistent names across groups** (every group's text token is called \`Text 01\`, not \`text\` in one and \`label\` in another).
+3. Give each group a \`css.prefix\` matching its name (e.g. \`bg-\`, \`surface-\`, \`primary-\`).
+4. Set \`context: true\` on every group that represents a surface a component might be rendered inside. Order matters: put the page-wide default group (usually \`Background\`) **first**, since the first context group also applies to \`:root\`.
+
+With this setup, components write context-agnostic CSS:
+
+\`\`\`css
+.card {
+  background: var(--bg);
+  color: var(--text-01);
+  border: 1px solid var(--border);
+}
+.card .help { color: var(--text-02); }
+.card:hover { background: var(--hover); }
+\`\`\`
+
+…and the surrounding wrapper picks the context:
+
+\`\`\`html
+<div class="surface"> … card renders against surface tokens … </div>
+<div class="error">   … same card renders against error tokens   … </div>
+\`\`\`
+
+Consumers should reach for the unprefixed form (\`--text-01\`) by default and only use the fully prefixed form (\`--bg-text-01\`, \`--error-text-01\`) when they explicitly need a token from a context they aren't inside — for example, an error message rendered on a neutral surface.
+
+### When to deviate
+
+- **Non-contextual tokens** — focus rings, scrim/overlay, brand-fixed accents, anchor link colors, selection highlight, and similar values that should look the same regardless of which surface they're rendered on belong in groups with \`context: false\` (or omitted). They're emitted as plain CSS variables only.
+- **Cross-cutting tokens** — values that don't logically belong to a single surface (e.g. shadow elevations, radii) likewise stay non-contextual.
+- If you find yourself wanting "the text color but slightly muted in this one place," prefer adding a \`Text 03\` to every context group over reaching across contexts. The matrix grows linearly, and consistency matters more than token count.
+
 ## Schema
 
 \`manifest.json\` has the shape:
@@ -45,7 +81,7 @@ Every entity (palette, token, group, theme) needs a numeric \`id\` that's unique
 
 - **Palette** — \`{ id, name, colors: string[] }\`. \`colors\` is an array of hex strings.
 - **Token** — \`{ id, name, value? | $ref?, css?: { name? } }\`. Exactly one of \`value\` (a hex or CSS-length string) or \`$ref\` must be present.
-- **TokenGroup** — \`{ id, name, tokens: number[], css?: { prefix? } }\`. \`tokens\` is a list of token \`id\`s; \`css.prefix\` is prepended to each token's CSS variable name.
+- **TokenGroup** — \`{ id, name, tokens: number[], context?: boolean, css?: { prefix? } }\`. \`tokens\` is a list of token \`id\`s; \`css.prefix\` is prepended to each token's CSS variable name. When \`context\` is \`true\`, the group also generates a context class — see *Context groups* below.
 - **Theme** — \`{ id, name, tokens: Override[], spacing: Override[] }\`. Overrides apply under a \`[data-theme="<name>"]\` selector.
 - **Override** — \`{ tokenId, value? | $ref? }\`. Same value/ref rule as tokens.
 
@@ -58,24 +94,27 @@ References use a JSON-pointer-like path: \`#/color/palettes/<paletteId>/colors/<
 
 Example: \`#/color/palettes/1/colors/5\` resolves to the 6th color in the palette with id 1.
 
-### Generated JSON shape (\`visual-source.json\`)
+### Context groups
 
-The generated \`visual-source.json\` is the *consumer* format and intentionally differs from \`manifest.json\`:
+A group with \`context: true\` generates an additional class block in \`visual-source.css\` that aliases the group's prefixed tokens to *unprefixed* CSS variables. This lets components write \`var(--text-01)\`, \`var(--border)\`, etc. and have the values resolve based on which context wrapper they're inside, via CSS custom property inheritance.
 
-- \`themes\` is an object keyed by theme name (not an array), so consumers can look up overrides by name.
-- All \`$ref\` values are resolved to concrete strings — no \`$ref\` fields appear in the output.
+- The class name is the group's \`css.prefix\` with the trailing \`-\` stripped (e.g. prefix \`bg-\` → class \`.bg\`).
+- For each token in the group whose full CSS variable name starts with the prefix, the block emits \`--<unprefixed>: var(--<full>);\` and a matching \`-rgb\` variant. Tokens whose full name does not start with the prefix (e.g. those with a \`css.name\` override that bypasses the prefix) are skipped.
+- The **first** group with \`context: true\` (in array order) also applies to \`:root\`, so its tokens are the page-wide defaults.
+- A context group with no \`css.prefix\` is skipped — the prefix is required for the strip-and-alias to be meaningful.
 
-Don't try to mirror this shape in \`manifest.json\`; only edit \`manifest.json\` and let \`regenerate\` produce the JSON.
+Example: a Background group with prefix \`bg-\` and tokens \`Text 01\`, \`Border\`, \`Hover\` produces:
 
-## What \`validate\` checks
+\`\`\`css
+:root, .bg {
+  --text-01: var(--bg-text-01);
+  --text-01-rgb: var(--bg-text-01-rgb);
+  --border:  var(--bg-border);
+  --border-rgb: var(--bg-border-rgb);
+  --hover:   var(--bg-hover);
+  --hover-rgb: var(--bg-hover-rgb);
+}
+\`\`\`
 
-- \`version\` is 2.
-- All required containers exist with correct types.
-- Every entity has a numeric \`id\` and string \`name\`.
-- Ids are unique within each collection.
-- Every token has exactly one of \`value\` / \`$ref\`.
-- Every \`$ref\` resolves to an existing palette color.
-- Every group token id refers to an existing color token.
-- Every theme override \`tokenId\` refers to an existing token of the right kind.
-- Warns on CSS variable name collisions between tokens.
+Consumers then write context-agnostic CSS — \`color: var(--text-01)\` — and wrap subtrees with \`<div class="error">…</div>\` to switch which context's tokens are inherited.
 `;

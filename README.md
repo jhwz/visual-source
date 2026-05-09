@@ -28,9 +28,42 @@ Visual Source has been built flexibly and aims to accomodate the majority of use
 
 ### Color
 
-Visual Source supports two layers of color tokens, palettes and tokens.
+Visual Source supports two layers of color tokens: palettes and tokens.
 
 Palettes are variants of a single color (usually shades from light to dark) which can be referenced by other tokens. Tokens directly correspond with the common CSS variables you may have in your app (e.g. `--primary-hover` or `--background`). Tokens are able to reference colors in your palettes, so if you make changes to one they are instantly reflected in the other.
+
+Tokens can be organized into **groups**. A group is a logical set of tokens (e.g. *Background*, *Surface*, *Primary*, *Field*, *Error*) and can apply a CSS prefix to its tokens — so a `Text 01` token in a group with prefix `bg-` is emitted as `--bg-text-01`.
+
+### Contextual tokens (recommended)
+
+The intended way to organize color tokens with Visual Source is **contextual grouping with context classes**.
+
+The idea: define one group per UI surface (Background, Surface, Primary, Field, Error, …), give each group the same set of role tokens (`Text 01`, `Text 02`, `Border`, `Hover`, `Disabled`, …) named consistently, and turn on the **Context** flag for each group. Visual Source will then generate an extra class block per group, aliasing the prefixed tokens to *unprefixed* CSS variables. The first context group (typically Background) also applies to `:root`, so its tokens are the page-wide defaults.
+
+Components then write context-agnostic CSS:
+
+```css
+.card {
+  background: var(--bg);
+  color: var(--text-01);
+  border: 1px solid var(--border);
+}
+.card .help { color: var(--text-02); }
+.card:hover { background: var(--hover); }
+```
+
+…and the surrounding wrapper picks the context — the same `.card` markup renders correctly on a neutral page, inside a surface, or inside an error region:
+
+```html
+<div class="surface"> … card uses surface tokens … </div>
+<div class="error">   … card uses error tokens   … </div>
+```
+
+This works because CSS custom properties inherit through the DOM. Each context class redefines the unprefixed variables (`--text-01`, `--border`, `--hover`, …) for its subtree, and components pick up whatever's nearest.
+
+**When to deviate.** Some tokens shouldn't change with context — focus rings, scrim/overlay, brand-fixed accents, anchor link colors, selection highlight, shadow elevations, radii. Leave the **Context** flag off on those groups; they'll be emitted as plain CSS variables only and behave globally.
+
+You're not required to use this pattern — non-contextual groups still work fine, and you can mix-and-match. But unless you have a reason to do otherwise, contextual grouping is what the tool is designed around.
 
 ### Spacing
 
