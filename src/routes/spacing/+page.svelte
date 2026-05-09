@@ -1,5 +1,7 @@
 <script lang="ts">
+	import Button from '$lib/Button.svelte';
 	import ConfirmDialog from '$lib/ConfirmDialog.svelte';
+	import Plus from '$lib/icons/Plus.svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import PageShell from '$lib/PageShell.svelte';
 	import { spec, type Token } from '$lib/spec.svelte.js';
@@ -42,7 +44,11 @@
 		<PageHeader
 			title="Spacing Tokens"
 			description="Define a spacing scale used across your design system."
-		/>
+		>
+			{#snippet actions()}
+				<Button onclick={add_token} icon={Plus} type="primary" size="sm">Add Token</Button>
+			{/snippet}
+		</PageHeader>
 	{/snippet}
 
 	{#snippet main()}
@@ -62,13 +68,14 @@
 	{/snippet}
 
 	{#snippet aside()}
-		<SpacingSidebar
-			token={selectedToken}
-			onadd={add_token}
-			ondelete={(t) => {
-				pendingDelete = t;
-			}}
-		/>
+		{#if selectedToken}
+			<SpacingSidebar
+				token={selectedToken}
+				ondelete={(t) => {
+					pendingDelete = t;
+				}}
+			/>
+		{/if}
 	{/snippet}
 </PageShell>
 

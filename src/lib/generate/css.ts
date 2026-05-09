@@ -1,6 +1,6 @@
 import { hex_to_rgb } from '$lib/colors.js';
 import { resolve_ref } from '$lib/reftype.js';
-import { token_value, type Spec, type Token } from '$lib/spec.svelte.js';
+import { token_value, type Spec, type Token } from '$lib/spec.js';
 import { kebabCase } from 'change-case';
 
 export function token_css_name(

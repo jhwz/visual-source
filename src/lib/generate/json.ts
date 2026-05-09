@@ -1,4 +1,4 @@
-import { resolved_spec, type Spec } from '$lib/spec.svelte';
+import { resolved_spec, type Spec } from '$lib/spec.js';
 
 export function generate_json(spec: Spec) {
 	const base = resolved_spec(spec);
