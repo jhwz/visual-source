@@ -48,6 +48,13 @@ function build_spec(): Spec {
 				{ id: 2, name: 'Medium', value: '1rem' }
 			]
 		},
+		general: {
+			tokens: [
+				{ id: 1, name: 'Radius SM', value: '4px' },
+				{ id: 2, name: 'Header Height', value: '64px' }
+			],
+			groups: [{ id: 1, name: 'Radii', tokens: [1] }]
+		},
 		themes: [
 			{
 				id: 1,
@@ -58,7 +65,8 @@ function build_spec(): Spec {
 					// Override Accent via $ref to a different palette swatch.
 					{ tokenId: 2, $ref: '#/color/palettes/1/colors/2' as any }
 				],
-				spacing: [{ tokenId: 1, value: '0.25rem' }]
+				spacing: [{ tokenId: 1, value: '0.25rem' }],
+				general: [{ tokenId: 1, value: '2px' }]
 			}
 		]
 	};
@@ -98,6 +106,14 @@ describe('integration: palettes + tokens + theme overrides', () => {
 			expect(css).toContain('--medium: 1rem;');
 		});
 
+		it('emits the general tokens block with no rgb variants', () => {
+			expect(css).toContain('/* GENERAL TOKENS */');
+			expect(css).toContain('--radius-sm: 4px;');
+			expect(css).toContain('--header-height: 64px;');
+			expect(css).not.toContain('--radius-sm-rgb');
+			expect(css).not.toContain('--header-height-rgb');
+		});
+
 		it('emits a theme block that overrides only the changed tokens', () => {
 			expect(css).toContain('/* THEME: Dark */');
 			expect(css).toContain('[data-theme="dark"]');
@@ -112,10 +128,15 @@ describe('integration: palettes + tokens + theme overrides', () => {
 			// Spacing override.
 			expect(css).toMatch(/\[data-theme="dark"\] \{[\s\S]*--small: 0.25rem;/);
 
+			// General token override.
+			expect(css).toMatch(/\[data-theme="dark"\] \{[\s\S]*--radius-sm: 2px;/);
+
 			// Border was not overridden -- it must NOT appear inside the theme block.
 			const themeBlock = css.match(/\[data-theme="dark"\] \{([\s\S]*?)\}/)?.[1] ?? '';
 			expect(themeBlock).not.toContain('--sf-border');
 			expect(themeBlock).not.toContain('--medium');
+			// header-height was not overridden either.
+			expect(themeBlock).not.toContain('--header-height');
 		});
 
 		it('begins with the do-not-edit banner', () => {
@@ -192,6 +213,22 @@ describe('integration: palettes + tokens + theme overrides', () => {
 			expect(surface).toBeTruthy();
 			expect(surface.tokens.map((t: any) => t.name)).toEqual(['Background', 'Border']);
 			expect(surface.tokens.map((t: any) => t.value)).toEqual(['#001f3f', '#cccccc']);
+		});
+
+		it('resolves general tokens at the root', () => {
+			const generalByName = Object.fromEntries(
+				json.general.tokens.map((t: any) => [t.name, t.value])
+			);
+			expect(generalByName['Radius SM']).toBe('4px');
+			expect(generalByName['Header Height']).toBe('64px');
+		});
+
+		it('resolves general tokens within a theme, applying overrides', () => {
+			const dark = Object.fromEntries(
+				json.themes.Dark.general.tokens.map((t: any) => [t.name, t.value])
+			);
+			expect(dark['Radius SM']).toBe('2px'); // overridden
+			expect(dark['Header Height']).toBe('64px'); // unchanged
 		});
 	});
 });

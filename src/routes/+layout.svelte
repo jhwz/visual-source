@@ -66,6 +66,7 @@
 		<sidebar-nav>
 			<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
 			<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
+			<SidebarLink href="/general-tokens" routeId="/general-tokens">General Tokens</SidebarLink>
 		</sidebar-nav>
 
 		<ThemeSelector />

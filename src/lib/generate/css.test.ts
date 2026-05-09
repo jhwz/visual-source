@@ -17,6 +17,7 @@ function make_spec(overrides?: Partial<Spec>): Spec {
 			groups: []
 		},
 		spacing: { scale: [] },
+		general: { tokens: [], groups: [] },
 		themes: [],
 		...overrides
 	} as Spec
@@ -98,7 +99,8 @@ describe('generate_css', () => {
 					id: 1,
 					name: 'Dark',
 					tokens: [{ tokenId: 1, value: '#000000' }],
-					spacing: []
+					spacing: [],
+					general: []
 				}
 			]
 		})
@@ -117,7 +119,8 @@ describe('generate_css', () => {
 					id: 1,
 					name: 'Compact',
 					tokens: [],
-					spacing: [{ tokenId: 1, value: '0.25rem' }]
+					spacing: [{ tokenId: 1, value: '0.25rem' }],
+					general: []
 				}
 			]
 		})
@@ -202,6 +205,54 @@ describe('generate_css', () => {
 		})
 		const css = generate_css(spec)
 		expect(css).not.toContain('CONTEXT:')
+	})
+
+	it('emits general tokens under their own block, no rgb variant, no prefix', () => {
+		const spec = make_spec({
+			general: {
+				tokens: [
+					{ id: 1, name: 'Radius SM', value: '4px' },
+					{ id: 2, name: 'Header Height', value: '64px' },
+					{ id: 3, name: 'Transition Fast', value: '150ms ease-in-out' }
+				],
+				// Even with a stray prefix on a group, general tokens never get prefixed.
+				groups: [{ id: 1, name: 'Radii', tokens: [1], css: { prefix: 'rad-' } }]
+			}
+		})
+		const css = generate_css(spec)
+		expect(css).toContain('/* GENERAL TOKENS */')
+		expect(css).toContain('--radius-sm: 4px;')
+		expect(css).toContain('--header-height: 64px;')
+		expect(css).toContain('--transition-fast: 150ms ease-in-out;')
+		// No rgb sibling for general tokens.
+		expect(css).not.toContain('--radius-sm-rgb')
+		// Group prefix must NOT be applied.
+		expect(css).not.toContain('--rad-radius-sm')
+	})
+
+	it('omits the GENERAL TOKENS block when there are no general tokens', () => {
+		const css = generate_css(make_spec())
+		expect(css).not.toContain('GENERAL TOKENS')
+	})
+
+	it('emits theme overrides for general tokens inside the same theme block', () => {
+		const spec = make_spec({
+			general: {
+				tokens: [{ id: 1, name: 'Radius SM', value: '4px' }],
+				groups: []
+			},
+			themes: [
+				{
+					id: 1,
+					name: 'Compact',
+					tokens: [],
+					spacing: [],
+					general: [{ tokenId: 1, value: '2px' }]
+				}
+			]
+		})
+		const css = generate_css(spec)
+		expect(css).toMatch(/\[data-theme="compact"\] \{[\s\S]*--radius-sm: 2px;/)
 	})
 
 	it('does not generate theme block when no themes exist', () => {

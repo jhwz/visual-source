@@ -12,6 +12,10 @@ export type Spec = {
 	spacing: {
 		scale: Token[];
 	};
+	general: {
+		tokens: Token[];
+		groups: TokenGroup[];
+	};
 	themes: Theme[];
 };
 
@@ -20,6 +24,7 @@ export type Theme = {
 	name: string;
 	tokens: ThemeTokenOverride[];
 	spacing: ThemeTokenOverride[];
+	general: ThemeTokenOverride[];
 };
 
 export type ThemeTokenOverride = {
@@ -58,7 +63,7 @@ export type Palette = {
 };
 
 export function token_value(token: Token, spec: Spec): string {
-	if (token.value) return token.value;
+	if (typeof token.value === 'string') return token.value;
 	if (!token.$ref) throw new Error('Token has no value or reference');
 	return resolve_ref(spec, token.$ref) as string;
 }
@@ -71,7 +76,7 @@ export function themed_token_value(
 	if (overrides) {
 		const override = overrides.find((o) => o.tokenId === token.id);
 		if (override) {
-			if (override.value) return override.value;
+			if (typeof override.value === 'string') return override.value;
 			if (override.$ref) return resolve_ref(spec, override.$ref) as string;
 		}
 	}
@@ -95,6 +100,10 @@ export type ResolvedSpec = {
 	spacing: {
 		scale: ResolvedToken[];
 	};
+	general: {
+		tokens: ResolvedToken[];
+		groups: ResolvedTokenGroup[];
+	};
 };
 
 export function resolved_spec(spec: Spec, theme?: Theme | null): ResolvedSpec {
@@ -107,6 +116,7 @@ export function resolved_spec(spec: Spec, theme?: Theme | null): ResolvedSpec {
 	}
 
 	const colorTokens = spec.color.tokens.map(resolved_with(theme?.tokens ?? null));
+	const generalTokens = (spec.general?.tokens ?? []).map(resolved_with(theme?.general ?? null));
 	return {
 		color: {
 			palettes: spec.color.palettes,
@@ -118,6 +128,15 @@ export function resolved_spec(spec: Spec, theme?: Theme | null): ResolvedSpec {
 				})
 			)
 		},
-		spacing: { scale: spec.spacing.scale.map(resolved_with(theme?.spacing ?? null)) }
+		spacing: { scale: spec.spacing.scale.map(resolved_with(theme?.spacing ?? null)) },
+		general: {
+			tokens: generalTokens,
+			groups: (spec.general?.groups ?? []).map(
+				(g): ResolvedTokenGroup => ({
+					...g,
+					tokens: g.tokens.map((id) => generalTokens.find((t) => t.id === id)!)
+				})
+			)
+		}
 	};
 }

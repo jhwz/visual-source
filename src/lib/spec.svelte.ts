@@ -14,6 +14,7 @@ export const spec: Spec = $state({
 		groups: []
 	},
 	spacing: { scale: [] },
+	general: { tokens: [], groups: [] },
 	themes: []
 });
 
@@ -34,7 +35,13 @@ storage.load_manifest().then((str) => {
 
 			spec2.spacing ||= { scale: [] };
 			spec2.spacing.scale ||= [];
+
+			spec2.general ||= { tokens: [], groups: [] };
+			spec2.general.tokens ||= [];
+			spec2.general.groups ||= [];
+
 			spec2.themes ||= [];
+			for (const t of spec2.themes) t.general ||= [];
 
 			Object.assign(spec, spec2);
 		}

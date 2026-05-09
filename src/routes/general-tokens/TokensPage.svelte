@@ -7,12 +7,12 @@
 	import PageShell from '$lib/PageShell.svelte';
 	import { spec, type Token } from '$lib/spec.svelte.js';
 	import { next_id } from '$lib/utils';
-	import type { build_groups } from './color_tokens';
+	import type { build_groups } from './general_tokens';
 	import GroupSidebar from './GroupSidebar.svelte';
 	import TokenGrid from './TokenGrid.svelte';
 	import TokenSidebar from './TokenSidebar.svelte';
 
-	let _ = autoscroller; // for some reason typescript can't see this import in the attachment..
+	let _ = autoscroller;
 
 	type Groups = ReturnType<typeof build_groups>;
 	type Props = {
@@ -23,11 +23,6 @@
 
 	const groups: Groups = $state(externalgroups);
 
-	// Pull: when spec loads asynchronously, externalgroups updates but the
-	// one-time $state copy above doesn't. Detect new external data and sync it
-	// into local state. untrack on the local read is essential — without it,
-	// deleting the last token would trigger the condition and undo the delete
-	// (the push effect below hasn't updated spec yet at $effect.pre time).
 	$effect.pre(() => {
 		const ext = externalgroups;
 		const extTokens = ext.flatMap((g) => g.tokens).length;
@@ -37,7 +32,6 @@
 		}
 	});
 
-	// Push: sync local mutations back to parent (triggers the bind setter)
 	$effect(() => {
 		externalgroups = groups;
 	});
@@ -50,7 +44,7 @@
 		const token: Token = {
 			id: next_id(alltokens),
 			name: 'New Token',
-			value: '#ffffff'
+			value: '0px'
 		};
 		const tokens = groups[0].tokens;
 		tokens.push(token);
@@ -70,9 +64,8 @@
 		for (const g of groups) {
 			g.tokens = g.tokens.filter((t1) => t1.id !== id);
 		}
-		// Clean up theme overrides for this token
 		for (const theme of spec.themes) {
-			theme.tokens = theme.tokens.filter((o) => o.tokenId !== id);
+			theme.general = (theme.general ?? []).filter((o) => o.tokenId !== id);
 		}
 	}
 
@@ -88,7 +81,10 @@
 
 <PageShell>
 	{#snippet header()}
-		<PageHeader title="Color Tokens" description="Named colors and groups for your design system.">
+		<PageHeader
+			title="General Tokens"
+			description="Radii, sizes, transitions, and other tokens that don't fit color or spacing."
+		>
 			{#snippet actions()}
 				<Button onclick={add_group} icon={Plus} type="secondary" size="sm">Create Group</Button>
 				<Button onclick={add_token} icon={Plus} type="primary" size="sm">Create Token</Button>
@@ -134,12 +130,7 @@
 									data-groupid={i}
 									draggable="true"
 								>
-									<h3>
-										{g.name || 'Untitled Group'}
-										{#if g.context}
-											<context-chip>contextual</context-chip>
-										{/if}
-									</h3>
+									<h3>{g.name || 'Untitled Group'}</h3>
 								</button>
 								{#if g.description}
 									<p>{g.description}</p>
@@ -188,7 +179,7 @@
 						const token: Token = {
 							id: next_id(alltokens),
 							name: 'New Token',
-							value: '#ffffff'
+							value: '0px'
 						};
 						const tokens = groups[idx].tokens;
 						tokens.push(token);
@@ -215,7 +206,7 @@
 						const removedIds = new Set(groups[idx].tokens.map((t) => t.id));
 						groups.splice(idx, 1);
 						for (const theme of spec.themes) {
-							theme.tokens = theme.tokens.filter((o) => !removedIds.has(o.tokenId));
+							theme.general = (theme.general ?? []).filter((o) => !removedIds.has(o.tokenId));
 						}
 						selected = null;
 					}}
@@ -258,23 +249,6 @@
 		font-size: 0.95rem;
 		font-weight: 600;
 		color: var(--bg-text-01);
-		display: inline-flex;
-		align-items: center;
-		gap: var(--sp-02);
-	}
-
-	context-chip {
-		display: inline-block;
-		padding: 0 var(--sp-02);
-		border-radius: var(--radius-sm, 999px);
-		background: var(--surface);
-		color: var(--surface-text-02, var(--bg-text-02));
-		border: 1px solid var(--surface-border);
-		font-size: 0.7rem;
-		font-weight: 500;
-		text-transform: lowercase;
-		letter-spacing: 0.02em;
-		line-height: 1.4;
 	}
 
 	token-group-header.ungrouped h3 {

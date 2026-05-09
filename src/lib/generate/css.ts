@@ -66,6 +66,14 @@ export function generate_css(spec: Spec) {
 		css += '}\n\n';
 	}
 
+	if (spec.general?.tokens?.length) {
+		css += `/* GENERAL TOKENS */\n:root{\n`;
+		for (const t of spec.general.tokens) {
+			css += `\t--${token_css_name(t, [])}: ${token_value(t, spec)};\n`;
+		}
+		css += '}\n\n';
+	}
+
 	for (const theme of spec.themes || []) {
 		const selector = kebabCase(theme.name);
 		css += `/* THEME: ${theme.name} */\n[data-theme="${selector}"] {\n`;
@@ -80,6 +88,14 @@ export function generate_css(spec: Spec) {
 
 		for (const override of theme.spacing) {
 			const baseToken = spec.spacing.scale.find((t) => t.id === override.tokenId);
+			if (!baseToken) continue;
+			const name = token_css_name(baseToken, []);
+			const value = override.value || (resolve_ref(spec, override.$ref!) as string);
+			css += `\t--${name}: ${value};\n`;
+		}
+
+		for (const override of theme.general ?? []) {
+			const baseToken = spec.general?.tokens?.find((t) => t.id === override.tokenId);
 			if (!baseToken) continue;
 			const name = token_css_name(baseToken, []);
 			const value = override.value || (resolve_ref(spec, override.$ref!) as string);

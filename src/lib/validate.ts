@@ -50,6 +50,18 @@ export function validate(spec: unknown): ValidateResult {
 	}
 	const scale = array_at(spacing, 'scale', 'spacing.scale', errors);
 
+	const general = root.general;
+	let general_tokens: unknown[] = [];
+	let general_groups: unknown[] = [];
+	if (general === undefined) {
+		// allow missing general, treat as empty
+	} else if (!is_object(general)) {
+		errors.push({ path: 'general', message: 'expected an object' });
+	} else {
+		general_tokens = array_at(general, 'tokens', 'general.tokens', errors);
+		general_groups = array_at(general, 'groups', 'general.groups', errors);
+	}
+
 	let themes: unknown[] = [];
 	if (root.themes === undefined) {
 		// allow missing themes, treat as []
@@ -63,6 +75,8 @@ export function validate(spec: unknown): ValidateResult {
 	check_entities(color_tokens, 'color.tokens', errors);
 	check_entities(groups, 'color.groups', errors);
 	check_entities(scale, 'spacing.scale', errors);
+	check_entities(general_tokens, 'general.tokens', errors);
+	check_entities(general_groups, 'general.groups', errors);
 	check_entities(themes, 'themes', errors);
 
 	const palette_index = new Map<number, Record<string, unknown>>();
@@ -81,9 +95,17 @@ export function validate(spec: unknown): ValidateResult {
 		if (!is_object(t)) continue;
 		if (typeof t.id === 'number') scale_ids.add(t.id);
 	}
+	const general_token_ids = new Set<number>();
+	for (const t of general_tokens) {
+		if (!is_object(t)) continue;
+		if (typeof t.id === 'number') general_token_ids.add(t.id);
+	}
 
 	color_tokens.forEach((t, i) => check_token(t, `color.tokens[${i}]`, palette_index, errors));
 	scale.forEach((t, i) => check_token(t, `spacing.scale[${i}]`, palette_index, errors));
+	general_tokens.forEach((t, i) =>
+		check_token(t, `general.tokens[${i}]`, palette_index, errors)
+	);
 
 	groups.forEach((g, i) => {
 		if (!is_object(g)) return;
@@ -110,6 +132,31 @@ export function validate(spec: unknown): ValidateResult {
 		});
 	});
 
+	general_groups.forEach((g, i) => {
+		if (!is_object(g)) return;
+		const path = `general.groups[${i}]`;
+		const token_ids = g.tokens;
+		if (!Array.isArray(token_ids)) {
+			errors.push({ path: `${path}.tokens`, message: 'expected an array of token IDs' });
+			return;
+		}
+		token_ids.forEach((id_val, j) => {
+			if (typeof id_val !== 'number') {
+				errors.push({
+					path: `${path}.tokens[${j}]`,
+					message: 'expected a numeric token ID'
+				});
+				return;
+			}
+			if (!general_token_ids.has(id_val)) {
+				errors.push({
+					path: `${path}.tokens[${j}]`,
+					message: `references non-existent general token id ${id_val}`
+				});
+			}
+		});
+	});
+
 	themes.forEach((theme, i) => {
 		if (!is_object(theme)) return;
 		const path = `themes[${i}]`;
@@ -129,9 +176,19 @@ export function validate(spec: unknown): ValidateResult {
 		} else {
 			errors.push({ path: `${path}.spacing`, message: 'expected an array' });
 		}
+		const general_overrides = theme.general;
+		if (general_overrides === undefined) {
+			// allow missing for backward compat with pre-general manifests
+		} else if (Array.isArray(general_overrides)) {
+			general_overrides.forEach((o, j) =>
+				check_override(o, `${path}.general[${j}]`, general_token_ids, palette_index, errors)
+			);
+		} else {
+			errors.push({ path: `${path}.general`, message: 'expected an array' });
+		}
 	});
 
-	check_css_name_collisions(color_tokens, groups, warnings);
+	check_css_name_collisions(color_tokens, groups, general_tokens, warnings);
 
 	return { errors, warnings };
 }
@@ -272,19 +329,19 @@ function check_ref(ref: string, palettes: Map<number, Record<string, unknown>>):
 function check_css_name_collisions(
 	tokens: unknown[],
 	groups: unknown[],
+	general_tokens: unknown[],
 	warnings: ValidationError[]
 ) {
 	const seen = new Map<string, string>();
-	const valid_groups = groups
-		.filter(is_object)
-		.map((g) => ({
-			tokens: Array.isArray(g.tokens) ? (g.tokens.filter((n) => typeof n === 'number') as number[]) : [],
-			css: is_object(g.css)
-				? { prefix: typeof g.css.prefix === 'string' ? g.css.prefix : undefined }
-				: undefined
-		}));
-	tokens.forEach((t, i) => {
-		if (!is_object(t)) return;
+	const valid_groups = groups.filter(is_object).map((g) => ({
+		tokens: Array.isArray(g.tokens)
+			? (g.tokens.filter((n) => typeof n === 'number') as number[])
+			: [],
+		css: is_object(g.css)
+			? { prefix: typeof g.css.prefix === 'string' ? g.css.prefix : undefined }
+			: undefined
+	}));
+	function record(t: Record<string, unknown>, path: string, scoped_groups: typeof valid_groups) {
 		if (typeof t.id !== 'number' || typeof t.name !== 'string') return;
 		const css_name = token_css_name(
 			{
@@ -292,9 +349,8 @@ function check_css_name_collisions(
 				name: t.name,
 				css: is_object(t.css) && typeof t.css.name === 'string' ? { name: t.css.name } : undefined
 			} as Parameters<typeof token_css_name>[0],
-			valid_groups
+			scoped_groups
 		);
-		const path = `color.tokens[${i}]`;
 		const prev = seen.get(css_name);
 		if (prev !== undefined) {
 			warnings.push({
@@ -304,5 +360,14 @@ function check_css_name_collisions(
 		} else {
 			seen.set(css_name, path);
 		}
+	}
+	tokens.forEach((t, i) => {
+		if (!is_object(t)) return;
+		record(t, `color.tokens[${i}]`, valid_groups);
+	});
+	general_tokens.forEach((t, i) => {
+		if (!is_object(t)) return;
+		// General groups never apply a CSS prefix, so resolve names with no groups.
+		record(t, `general.tokens[${i}]`, []);
 	});
 }

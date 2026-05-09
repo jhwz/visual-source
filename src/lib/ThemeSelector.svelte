@@ -20,7 +20,8 @@
 			id,
 			name: `Theme ${spec.themes.length + 1}`,
 			tokens: [],
-			spacing: []
+			spacing: [],
+			general: []
 		});
 		themeContext.activeThemeId = id;
 	}

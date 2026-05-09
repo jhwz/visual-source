@@ -69,6 +69,12 @@ You're not required to use this pattern — non-contextual groups still work fin
 
 Spacing support is currently very rudimentary. We allow you to define one scale of spacing tokens to be used, and these tokens are generated directly into the CSS. There is a lot more we could do here still!
 
+### General tokens
+
+Anything that isn't a color or a spacing value — border radii, fixed sizes like `header-height`, transition durations and easings, z-indices, shadows — lives in **General Tokens**. Each general token is emitted as a single CSS custom property (no `-rgb` variant, no prefixed groupings).
+
+General tokens can be organised into groups, but those groups are for **documentation and organisation only** — they do not apply a CSS prefix and do not generate context classes. Theme overrides work the same way as for colour and spacing tokens.
+
 ## On the shoulders of giants
 
 This project wouldn't be possible without the work of the open source projects it's built with.

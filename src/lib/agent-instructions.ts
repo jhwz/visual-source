@@ -75,14 +75,18 @@ Consumers should reach for the unprefixed form (\`--text-01\`) by default and on
     "groups":   TokenGroup[]
   },
   "spacing": { "scale": Token[] },
+  "general": {
+    "tokens": Token[],
+    "groups": TokenGroup[]
+  },
   "themes":  Theme[]
 }
 \`\`\`
 
 - **Palette** — \`{ id, name, colors: string[] }\`. \`colors\` is an array of hex strings.
 - **Token** — \`{ id, name, value? | $ref?, css?: { name? } }\`. Exactly one of \`value\` (a hex or CSS-length string) or \`$ref\` must be present.
-- **TokenGroup** — \`{ id, name, tokens: number[], context?: boolean, css?: { prefix? } }\`. \`tokens\` is a list of token \`id\`s; \`css.prefix\` is prepended to each token's CSS variable name. When \`context\` is \`true\`, the group also generates a context class — see *Context groups* below.
-- **Theme** — \`{ id, name, tokens: Override[], spacing: Override[] }\`. Overrides apply under a \`[data-theme="<name>"]\` selector.
+- **TokenGroup** — \`{ id, name, tokens: number[], context?: boolean, css?: { prefix? } }\`. \`tokens\` is a list of token \`id\`s; \`css.prefix\` is prepended to each token's CSS variable name. When \`context\` is \`true\`, the group also generates a context class — see *Context groups* below. **Note:** \`css.prefix\` and \`context\` only apply to color groups. They are ignored for general groups.
+- **Theme** — \`{ id, name, tokens: Override[], spacing: Override[], general: Override[] }\`. \`tokens\` overrides color tokens; \`spacing\` and \`general\` override their respective collections. Overrides apply under a \`[data-theme="<name>"]\` selector.
 - **Override** — \`{ tokenId, value? | $ref? }\`. Same value/ref rule as tokens.
 
 ### \`$ref\` format
@@ -117,4 +121,24 @@ Example: a Background group with prefix \`bg-\` and tokens \`Text 01\`, \`Border
 \`\`\`
 
 Consumers then write context-agnostic CSS — \`color: var(--text-01)\` — and wrap subtrees with \`<div class="error">…</div>\` to switch which context's tokens are inherited.
+
+### General tokens
+
+\`general.tokens\` holds arbitrary CSS values that don't belong to color or spacing — radii, fixed sizes (e.g. \`header-height\`), transition variables, z-indices, anything else.
+
+- Each token's \`value\` is a raw CSS string (\`4px\`, \`150ms ease-in-out\`, \`64px\`, etc.).
+- Each token is emitted as a single \`--<name>\` custom property in a \`/* GENERAL TOKENS */\` block. No \`-rgb\` sibling is emitted (general tokens aren't colors).
+- \`general.groups\` are for **organisation/documentation only**. Unlike color groups, general groups do **not** apply a CSS prefix and do **not** generate context classes — \`css.prefix\` and \`context\` on a general group are ignored. Consumers can still set them in the manifest, but the generator skips them.
+- Theme overrides for general tokens go in \`Theme.general\` and are emitted inside the same \`[data-theme="<name>"]\` block as color and spacing overrides.
+
+Example general tokens block:
+
+\`\`\`css
+/* GENERAL TOKENS */
+:root{
+  --radius-sm: 4px;
+  --header-height: 64px;
+  --transition-fast: 150ms ease-in-out;
+}
+\`\`\`
 `;

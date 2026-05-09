@@ -39,9 +39,12 @@ Spec
 ├── color
 │   ├── palettes[]    — Color scales (arrays of shades)
 │   ├── tokens[]      — Named tokens with $ref to palette colors
-│   └── groups[]      — Logical groupings with optional CSS prefix
-└── spacing
-    └── scale[]       — Spacing tokens
+│   └── groups[]      — Logical groupings with optional CSS prefix / context flag
+├── spacing
+│   └── scale[]       — Spacing tokens
+└── general
+    ├── tokens[]      — Arbitrary CSS values (radii, sizes, transitions, …)
+    └── groups[]      — Documentation-only groups (no prefix, no context)
 ```
 
 ### Token Reference System (`src/lib/reftype.ts`)
@@ -50,7 +53,7 @@ Tokens use JSON-pointer-style `$ref` strings (e.g. `#/color/palettes/0/colors/5`
 
 ### Code Generation (`src/lib/generate/`)
 
-- **`css.ts`** — Generates CSS custom properties with both hex (`--token`) and RGB (`--token-rgb`) variants. Groups with `context: true` additionally emit a class block (`.bg`, `.surface`, …) aliasing prefixed tokens to unprefixed CSS variables; the first such group also applies to `:root`.
+- **`css.ts`** — Generates CSS custom properties with both hex (`--token`) and RGB (`--token-rgb`) variants. Groups with `context: true` additionally emit a class block (`.bg`, `.surface`, …) aliasing prefixed tokens to unprefixed CSS variables; the first such group also applies to `:root`. General tokens emit in their own `/* GENERAL TOKENS */` block with single (no `-rgb`) variables and no prefix application.
 - **`json.ts`** — Exports resolved token values as JSON
 
 Output goes to `.visual-source/visual-source.css` and `.visual-source/visual-source.json`.

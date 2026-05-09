@@ -5,10 +5,10 @@
 	import Copy from '$lib/icons/Copy.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import Trash from '$lib/icons/Trash.svelte';
-	import type { BuiltTokenGroup } from './color_tokens';
+	import type { BuiltGeneralTokenGroup } from './general_tokens';
 
 	type Props = {
-		group: BuiltTokenGroup;
+		group: BuiltGeneralTokenGroup;
 		ondelete: () => void;
 		onduplicate: () => void;
 		ontokenadd: () => void;
@@ -26,34 +26,6 @@
 	<FormField label="Description">
 		<textarea bind:value={group.description} rows="3"></textarea>
 	</FormField>
-
-	<section>
-		<h3>CSS</h3>
-		<FormField label="Prefix">
-			<input
-				type="text"
-				spellcheck="false"
-				value={group.css?.prefix}
-				onchange={(e) => {
-					group.css ||= {};
-					group.css.prefix = e.currentTarget.value || undefined;
-				}}
-			/>
-		</FormField>
-
-		<FormField
-			label="Contextual"
-			description="Emit a context class so unprefixed tokens (e.g. --text-01) resolve to this group's values inside a wrapper. Requires a prefix. The first contextual group also seeds :root."
-		>
-			<input
-				type="checkbox"
-				checked={group.context ?? false}
-				onchange={(e) => {
-					group.context = e.currentTarget.checked || undefined;
-				}}
-			/>
-		</FormField>
-	</section>
 
 	<group-actions>
 		<Button onclick={ontokenadd} type="secondary" size="sm" icon={Plus}>Add Token</Button>
@@ -87,14 +59,6 @@
 		flex-direction: column;
 		gap: var(--sp-04);
 		padding: var(--sp-04) var(--sp-03);
-	}
-
-	section {
-		margin-top: var(--sp-04);
-	}
-
-	section h3 {
-		margin: 0 0 var(--sp-02) 0;
 	}
 
 	group-actions {

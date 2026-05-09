@@ -16,6 +16,7 @@ function make_spec(overrides?: Partial<Spec>): Spec {
 			groups: []
 		},
 		spacing: { scale: [] },
+		general: { tokens: [], groups: [] },
 		themes: [],
 		...overrides
 	} as Spec
@@ -86,6 +87,43 @@ describe('resolved_spec', () => {
 		expect(result.spacing.scale[0].value).toBe('4px')
 	})
 
+	it('resolves general tokens and groups', () => {
+		const spec = make_spec({
+			general: {
+				tokens: [
+					{ id: 1, name: 'Radius SM', value: '4px' } as Token,
+					{ id: 2, name: 'Radius MD', value: '8px' } as Token
+				],
+				groups: [{ id: 1, name: 'Radii', tokens: [1, 2] }]
+			}
+		})
+		const result = resolved_spec(spec)
+		expect(result.general.tokens).toHaveLength(2)
+		expect(result.general.tokens[0].value).toBe('4px')
+		expect(result.general.groups[0].tokens.map((t) => t.name)).toEqual([
+			'Radius SM',
+			'Radius MD'
+		])
+	})
+
+	it('applies theme overrides to general tokens', () => {
+		const spec = make_spec({
+			general: {
+				tokens: [{ id: 1, name: 'Radius SM', value: '4px' } as Token],
+				groups: []
+			}
+		})
+		const theme: Theme = {
+			id: 1,
+			name: 'compact',
+			tokens: [],
+			spacing: [],
+			general: [{ tokenId: 1, value: '2px' }]
+		}
+		const result = resolved_spec(spec, theme)
+		expect(result.general.tokens[0].value).toBe('2px')
+	})
+
 	it('uses theme overrides when theme is provided', () => {
 		const spec = make_spec({
 			color: {
@@ -101,7 +139,8 @@ describe('resolved_spec', () => {
 			id: 1,
 			name: 'dark',
 			tokens: [{ tokenId: 1, value: '#111' }],
-			spacing: []
+			spacing: [],
+			general: []
 		}
 		const result = resolved_spec(spec, theme)
 		expect(result.color.tokens[0].value).toBe('#111')

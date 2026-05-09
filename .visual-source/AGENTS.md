@@ -75,14 +75,18 @@ Consumers should reach for the unprefixed form (`--text-01`) by default and only
     "groups":   TokenGroup[]
   },
   "spacing": { "scale": Token[] },
+  "general": {
+    "tokens": Token[],
+    "groups": TokenGroup[]
+  },
   "themes":  Theme[]
 }
 ```
 
 - **Palette** — `{ id, name, colors: string[] }`. `colors` is an array of hex strings.
 - **Token** — `{ id, name, value? | $ref?, css?: { name? } }`. Exactly one of `value` (a hex or CSS-length string) or `$ref` must be present.
-- **TokenGroup** — `{ id, name, tokens: number[], context?: boolean, css?: { prefix? } }`. `tokens` is a list of token `id`s; `css.prefix` is prepended to each token's CSS variable name. When `context` is `true`, the group also generates a context class — see *Context groups* below.
-- **Theme** — `{ id, name, tokens: Override[], spacing: Override[] }`. Overrides apply under a `[data-theme="<name>"]` selector.
+- **TokenGroup** — `{ id, name, tokens: number[], context?: boolean, css?: { prefix? } }`. `tokens` is a list of token `id`s; `css.prefix` is prepended to each token's CSS variable name. When `context` is `true`, the group also generates a context class — see *Context groups* below. **Note:** `css.prefix` and `context` only apply to color groups. They are ignored for general groups.
+- **Theme** — `{ id, name, tokens: Override[], spacing: Override[], general: Override[] }`. `tokens` overrides color tokens; `spacing` and `general` override their respective collections. Overrides apply under a `[data-theme="<name>"]` selector.
 - **Override** — `{ tokenId, value? | $ref? }`. Same value/ref rule as tokens.
 
 ### `$ref` format
@@ -118,23 +122,22 @@ Example: a Background group with prefix `bg-` and tokens `Text 01`, `Border`, `H
 
 Consumers then write context-agnostic CSS — `color: var(--text-01)` — and wrap subtrees with `<div class="error">…</div>` to switch which context's tokens are inherited.
 
-### Generated JSON shape (`visual-source.json`)
+### General tokens
 
-The generated `visual-source.json` is the *consumer* format and intentionally differs from `manifest.json`:
+`general.tokens` holds arbitrary CSS values that don't belong to color or spacing — radii, fixed sizes (e.g. `header-height`), transition variables, z-indices, anything else.
 
-- `themes` is an object keyed by theme name (not an array), so consumers can look up overrides by name.
-- All `$ref` values are resolved to concrete strings — no `$ref` fields appear in the output.
+- Each token's `value` is a raw CSS string (`4px`, `150ms ease-in-out`, `64px`, etc.).
+- Each token is emitted as a single `--<name>` custom property in a `/* GENERAL TOKENS */` block. No `-rgb` sibling is emitted (general tokens aren't colors).
+- `general.groups` are for **organisation/documentation only**. Unlike color groups, general groups do **not** apply a CSS prefix and do **not** generate context classes — `css.prefix` and `context` on a general group are ignored. Consumers can still set them in the manifest, but the generator skips them.
+- Theme overrides for general tokens go in `Theme.general` and are emitted inside the same `[data-theme="<name>"]` block as color and spacing overrides.
 
-Don't try to mirror this shape in `manifest.json`; only edit `manifest.json` and let `regenerate` produce the JSON.
+Example general tokens block:
 
-## What `validate` checks
-
-- `version` is 2.
-- All required containers exist with correct types.
-- Every entity has a numeric `id` and string `name`.
-- Ids are unique within each collection.
-- Every token has exactly one of `value` / `$ref`.
-- Every `$ref` resolves to an existing palette color.
-- Every group token id refers to an existing color token.
-- Every theme override `tokenId` refers to an existing token of the right kind.
-- Warns on CSS variable name collisions between tokens.
+```css
+/* GENERAL TOKENS */
+:root{
+  --radius-sm: 4px;
+  --header-height: 64px;
+  --transition-fast: 150ms ease-in-out;
+}
+```
