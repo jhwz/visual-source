@@ -2,6 +2,7 @@
 	import Button from '$lib/Button.svelte';
 	import { download_text, read_file_as_text } from '$lib/environment/browser.js';
 	import { generate_css } from '$lib/generate/css.js';
+	import { generate_dtcg } from '$lib/generate/dtcg.js';
 	import { spec, write_spec_outputs } from '$lib/spec.svelte.js';
 
 	let importInput: HTMLInputElement | undefined = $state();
@@ -30,6 +31,10 @@
 	function download_css() {
 		download_text('visual-source.css', generate_css(spec), 'text/css');
 	}
+
+	function download_dtcg() {
+		download_text('tokens.dtcg.json', generate_dtcg(spec), 'application/json');
+	}
 </script>
 
 <project-actions>
@@ -43,6 +48,7 @@
 	/>
 	<Button type="ghost" size="sm" onclick={download_manifest}>Download manifest</Button>
 	<Button type="ghost" size="sm" onclick={download_css}>Download CSS</Button>
+	<Button type="ghost" size="sm" onclick={download_dtcg}>Download DTCG</Button>
 </project-actions>
 
 <style>

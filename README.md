@@ -21,6 +21,8 @@ Download the latest version of Visual Source from the [Releases](https://github.
 - Follow the Getting Started prompt to set up some example tokens
 - Visual Source will start generating CSS files for you to reference. To load in your tokens simply import the generated `.visual-source/visual-source.css`
 
+When running in the browser, you can also export your tokens in [DTCG](https://design-tokens.github.io/community-group/format/) format via the **Download DTCG** button — useful for round-tripping into Style Dictionary, Tokens Studio, or any other DTCG-aware pipeline.
+
 
 ## Concepts
 

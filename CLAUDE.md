@@ -54,7 +54,8 @@ Tokens use JSON-pointer-style `$ref` strings (e.g. `#/color/palettes/0/colors/5`
 ### Code Generation (`src/lib/generate/`)
 
 - **`css.ts`** — Generates CSS custom properties with both hex (`--token`) and RGB (`--token-rgb`) variants. Groups with `context: true` additionally emit a class block (`.bg`, `.surface`, …) aliasing prefixed tokens to unprefixed CSS variables; the first such group also applies to `:root`. General tokens emit in their own `/* GENERAL TOKENS */` block with single (no `-rgb`) variables and no prefix application.
-- **`json.ts`** — Exports resolved token values as JSON
+- **`json.ts`** — Exports resolved token values as JSON.
+- **`dtcg.ts`** — Exports the spec in [DTCG](https://design-tokens.github.io/community-group/format/) format. Palettes go under `color.palettes.<name>.<NN>`; color/general tokens nest under their group (or sit at the section root if ungrouped); `$ref`s are translated to DTCG `{path.to.token}` references; themes go under `$extensions["com.visualsource.themes"]` because DTCG hasn't standardised mode/theme yet.
 
 Output goes to `.visual-source/visual-source.css` and `.visual-source/visual-source.json`.
 
