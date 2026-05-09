@@ -2,7 +2,6 @@
 	import Button from '$lib/Button.svelte';
 	import { download_text, read_file_as_text } from '$lib/environment/browser.js';
 	import { generate_css } from '$lib/generate/css.js';
-	import { generate_json } from '$lib/generate/json.js';
 	import { spec, write_spec_outputs } from '$lib/spec.svelte.js';
 
 	let importInput: HTMLInputElement | undefined = $state();
@@ -31,10 +30,6 @@
 	function download_css() {
 		download_text('visual-source.css', generate_css(spec), 'text/css');
 	}
-
-	function download_json() {
-		download_text('visual-source.json', generate_json(spec), 'application/json');
-	}
 </script>
 
 <project-actions>
@@ -48,7 +43,6 @@
 	/>
 	<Button type="ghost" size="sm" onclick={download_manifest}>Download manifest</Button>
 	<Button type="ghost" size="sm" onclick={download_css}>Download CSS</Button>
-	<Button type="ghost" size="sm" onclick={download_json}>Download JSON</Button>
 </project-actions>
 
 <style>
