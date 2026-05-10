@@ -8,7 +8,10 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		paths: {
+			base: process.env.BASE_PATH ?? ''
+		}
 	},
 	compilerOptions: { runes: true }
 };
