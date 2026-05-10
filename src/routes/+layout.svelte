@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import BrowserToolbar from '$lib/BrowserToolbar.svelte';
 	import ConfirmDialog from '$lib/ConfirmDialog.svelte';
@@ -37,7 +38,7 @@
 			name: `Palette ${spec.color.palettes.length + 1}`,
 			colors: ['#ffffff']
 		});
-		goto(`/palettes?id=${id}`);
+		goto(resolve(`/palettes?id=${id}`));
 	}
 
 	function request_remove_palette() {
@@ -48,7 +49,7 @@
 	function remove_palette() {
 		if (paletteID == null) return;
 		spec.color.palettes = spec.color.palettes.filter((p) => p.id !== paletteID);
-		goto('/');
+		goto(resolve('/'));
 	}
 </script>
 
@@ -64,9 +65,9 @@
 		<app-name>Visual Source</app-name>
 
 		<sidebar-nav>
-			<SidebarLink href="/" routeId="/">Color Tokens</SidebarLink>
-			<SidebarLink href="/spacing" routeId="/spacing">Spacing Tokens</SidebarLink>
-			<SidebarLink href="/general-tokens" routeId="/general-tokens">General Tokens</SidebarLink>
+			<SidebarLink href={resolve('/')} routeId="/">Color Tokens</SidebarLink>
+			<SidebarLink href={resolve('/spacing')} routeId="/spacing">Spacing Tokens</SidebarLink>
+			<SidebarLink href={resolve('/general-tokens')} routeId="/general-tokens">General Tokens</SidebarLink>
 		</sidebar-nav>
 
 		<ThemeSelector />
@@ -94,7 +95,7 @@
 					<PaletteButton
 						name={p.name}
 						selected={paletteID === p.id}
-						onclick={() => goto(`/palettes?id=${p.id}`)}
+						onclick={() => goto(resolve(`/palettes?id=${p.id}`))}
 						onchange={(name) => {
 							p.name = name;
 						}}

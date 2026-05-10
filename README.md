@@ -11,9 +11,15 @@ It supports definings color palettes, color tokens, spacing tokens and more. Ple
 When getting started with a new project coming up with design tokens, and then updating them as your refine the look can be a slow process. Visual Source tries to solve this by giving you a design token GUI locally in your project. As you make changes, we regenerate CSS and you see the results in your app immediately! It gives you source of truth to document your tokens, and tools to do things quickly which are otherwise tedious in a text editor.
 
 
+## Check it out
+
+A web build of the UI is hosted at [jhwz.github.io/visual-source](https://jhwz.github.io/visual-source/) so you can try out the interface and see how the tooling feels before installing anything.
+
+
 ## Installation
 
 Download the latest version of Visual Source from the [Releases](https://github.com/jhwz/visual-source/releases) page.
+
 
 ## Quick Start
 
