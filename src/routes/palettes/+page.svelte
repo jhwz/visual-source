@@ -99,7 +99,7 @@
 							<IconButton icon={Pencil} label="Rename palette" onclick={start_rename} />
 						{/snippet}
 						{#snippet actions()}
-							<Button icon={Plus} type="secondary" onclick={add_color}>Add Color</Button>
+							<Button icon={Plus} type="secondary" size="sm" onclick={add_color}>New Color</Button>
 						{/snippet}
 					</PageHeader>
 				{/if}

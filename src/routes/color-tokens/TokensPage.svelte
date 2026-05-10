@@ -91,7 +91,7 @@
 		<PageHeader title="Color Tokens" description="Named colors and groups for your design system.">
 			{#snippet actions()}
 				<Button onclick={add_group} icon={Plus} type="secondary" size="sm">Create Group</Button>
-				<Button onclick={add_token} icon={Plus} type="primary" size="sm">Create Token</Button>
+				<Button onclick={add_token} icon={Plus} type="primary" size="sm">New Token</Button>
 			{/snippet}
 		</PageHeader>
 	{/snippet}

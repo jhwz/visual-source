@@ -46,7 +46,7 @@
 			description="Define a spacing scale used across your design system."
 		>
 			{#snippet actions()}
-				<Button onclick={add_token} icon={Plus} type="primary" size="sm">Add Token</Button>
+				<Button onclick={add_token} icon={Plus} type="primary" size="sm">New Token</Button>
 			{/snippet}
 		</PageHeader>
 	{/snippet}
