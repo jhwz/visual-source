@@ -83,6 +83,25 @@ Anything that isn't a color or a spacing value — border radii, fixed sizes lik
 
 General tokens can be organised into groups, but those groups are for **documentation and organisation only** — they do not apply a CSS prefix and do not generate context classes. Theme overrides work the same way as for colour and spacing tokens.
 
+## Post-generation hook
+
+If you drop an executable file named `generate` into `.visual-source/`, Visual Source will run it every time it regenerates the output files — both during GUI auto-save and when you run `visual-source regenerate`. The script runs with `.visual-source/` as its working directory.
+
+This is useful for any downstream step that should track token changes:
+
+- copying `visual-source.css` / `visual-source.json` into another package
+- running a build, codegen, or formatter over the generated files
+- committing the regenerated outputs
+
+```sh
+# .visual-source/generate
+#!/usr/bin/env bash
+set -euo pipefail
+cp visual-source.css ../packages/ui/src/tokens.css
+```
+
+Make sure the file is executable (`chmod +x .visual-source/generate`). A non-zero exit fails `visual-source regenerate`; in the GUI the error is logged to the developer console and auto-save continues.
+
 ## On the shoulders of giants
 
 This project wouldn't be possible without the work of the open source projects it's built with.
