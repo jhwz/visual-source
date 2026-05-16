@@ -5,6 +5,7 @@
 	import FormField from '$lib/FormField.svelte';
 	import { token_css_name } from '$lib/generate/css';
 	import Trash from '$lib/icons/Trash.svelte';
+	import MoveToMenu from '$lib/MoveToMenu.svelte';
 	import {
 		spec,
 		themed_token_value,
@@ -18,8 +19,17 @@
 	type Props = {
 		token: Token;
 		ondelete: () => void;
+		groups: { name: string }[];
+		currentGroupIndex: number;
+		onmove: (targetIndex: number) => void;
 	};
-	let { token = $bindable(), ondelete }: Props = $props();
+	let {
+		token = $bindable(),
+		ondelete,
+		groups,
+		currentGroupIndex,
+		onmove
+	}: Props = $props();
 
 	let theme = $derived(activeTheme());
 
@@ -121,7 +131,8 @@
 		</section>
 	{/if}
 
-	<delete-token>
+	<token-actions>
+		<MoveToMenu {groups} currentIndex={currentGroupIndex} {onmove} />
 		<Button
 			onclick={() => {
 				confirmDeleteOpen = true;
@@ -132,7 +143,7 @@
 		>
 			Delete
 		</Button>
-	</delete-token>
+	</token-actions>
 </side-panel-content>
 
 <ConfirmDialog
@@ -170,8 +181,10 @@
 		margin: 0;
 	}
 
-	delete-token {
+	token-actions {
 		display: flex;
+		flex-wrap: wrap;
+		gap: var(--sp-02);
 		margin-top: auto;
 	}
 

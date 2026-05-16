@@ -5,6 +5,7 @@
 	import Plus from '$lib/icons/Plus.svelte';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import PageShell from '$lib/PageShell.svelte';
+	import { move_token as move_token_in_groups } from '$lib/move';
 	import { spec, type Token } from '$lib/spec.svelte.js';
 	import { next_id } from '$lib/utils';
 	import type { build_groups } from './color_tokens';
@@ -84,6 +85,15 @@
 			}
 		}
 	}
+
+	function move_token(id: number, targetIndex: number) {
+		move_token_in_groups(groups, id, targetIndex);
+		remove_empty_groups();
+	}
+
+	function group_index_of(id: number) {
+		return groups.findIndex((g) => g.tokens.some((t) => t.id === id));
+	}
 </script>
 
 <PageShell>
@@ -155,15 +165,11 @@
 							}}
 							groupselected={active}
 							ondrop={(id, targetID) => {
-								const token = alltokens.find((t) => t.id === id);
-								if (!token) return;
-								const index = g.tokens.findIndex((t) => t.id === targetID);
-								if (index >= 0) {
-									remove_token(id);
-									g.tokens.splice(index, 0, token);
+								const position = g.tokens.findIndex((t) => t.id === targetID);
+								if (position >= 0) {
+									move_token_in_groups(groups, id, i, position);
 								} else if (!g.tokens.some((t) => t.id === id)) {
-									remove_token(id);
-									g.tokens.push(token);
+									move_token_in_groups(groups, id, i);
 								}
 								remove_empty_groups();
 							}}
@@ -222,8 +228,12 @@
 				/>
 			{:else}
 				{@const token = selected}
+				{@const tokenGroupIndex = group_index_of(token.id)}
 				<TokenSidebar
 					bind:token={selected}
+					{groups}
+					currentGroupIndex={tokenGroupIndex}
+					onmove={(target) => move_token(token.id, target)}
 					ondelete={() => {
 						remove_token(token.id);
 						selected = null;
