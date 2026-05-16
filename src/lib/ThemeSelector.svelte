@@ -3,6 +3,7 @@
 	import IconButton from '$lib/IconButton.svelte';
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
+	import { themes as themes_ops } from '$lib/operations';
 	import { spec } from '$lib/spec.svelte.js';
 	import { themeContext } from '$lib/theme-context.svelte.js';
 	import { next_id } from '$lib/utils';
@@ -33,7 +34,7 @@
 
 	function remove_theme() {
 		if (themeContext.activeThemeId == null) return;
-		spec.themes = spec.themes.filter((t) => t.id !== themeContext.activeThemeId);
+		themes_ops.delete_theme(spec, themeContext.activeThemeId);
 		themeContext.activeThemeId = null;
 	}
 </script>

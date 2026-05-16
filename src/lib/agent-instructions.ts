@@ -26,6 +26,17 @@ Every entity (palette, token, group, theme) needs a numeric \`id\` that's unique
 - \`visual-source show\` — pretty-print \`manifest.json\` to stdout.
 - \`visual-source path\` — print the absolute path of \`manifest.json\`.
 
+## Post-generation hook
+
+If a \`generate\` executable exists in this directory, it is invoked (with this
+directory as the working directory) immediately after \`visual-source.css\` and
+\`visual-source.json\` are written — both by the GUI's auto-save and by
+\`visual-source regenerate\`. Use it to run any downstream step that should track
+token changes (e.g. copy outputs into another package, run a build, commit the
+result). It must be executable (\`chmod +x generate\`). A non-zero exit fails
+\`visual-source regenerate\`; in the GUI the error is logged to the console and
+auto-save continues.
+
 ## Recommended structure
 
 The intended way to organize tokens with this tool is **contextual grouping with context classes**. Follow this unless you have a clear reason not to.

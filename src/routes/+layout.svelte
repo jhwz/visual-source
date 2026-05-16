@@ -8,6 +8,7 @@
 	import IconButton from '$lib/IconButton.svelte';
 	import Minus from '$lib/icons/Minus.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
+	import { palettes as palettes_ops } from '$lib/operations';
 	import PaletteButton from '$lib/PaletteButton.svelte';
 	import SidebarLink from '$lib/SidebarLink.svelte';
 	import { spec, write_spec_outputs } from '$lib/spec.svelte.js';
@@ -48,7 +49,7 @@
 
 	function remove_palette() {
 		if (paletteID == null) return;
-		spec.color.palettes = spec.color.palettes.filter((p) => p.id !== paletteID);
+		palettes_ops.delete_palette(spec, paletteID);
 		goto(resolve('/'));
 	}
 </script>

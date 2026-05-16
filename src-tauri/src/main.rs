@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use clap::{Parser, Subcommand};
-use std::{fs, path::PathBuf, process};
+use std::{fs, path::{Path, PathBuf}, process};
 
 mod js;
 
@@ -120,6 +120,33 @@ fn run_regenerate(skip_validate: bool) -> Result<(), Box<dyn std::error::Error>>
 
     fs::write(dir.join("visual-source.css"), css)?;
     fs::write(dir.join("visual-source.json"), json)?;
+    run_generate_hook(&dir)?;
+    Ok(())
+}
+
+/// If a `generate` executable exists in the visual-source directory, run it
+/// (with that directory as the working directory). Used as a user-defined
+/// post-generation hook — e.g. to copy generated files elsewhere, run a
+/// downstream build step, or commit the result.
+fn run_generate_hook(dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let hook = dir.join(GENERATE_HOOK_FILENAME);
+    if !hook.exists() {
+        return Ok(());
+    }
+    let output = std::process::Command::new(&hook)
+        .current_dir(dir)
+        .output()
+        .map_err(|e| format!("failed to run {}: {}", hook.display(), e))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "{} exited with {}: {}",
+            hook.display(),
+            output.status,
+            stderr.trim()
+        )
+        .into());
+    }
     Ok(())
 }
 
@@ -208,6 +235,7 @@ fn run_init() -> Result<(), Box<dyn std::error::Error>> {
 
 const VISUAL_SOURCE_DIR: &str = ".visual-source";
 const MANIFEST_FILENAME: &str = "manifest.json";
+const GENERATE_HOOK_FILENAME: &str = "generate";
 
 fn run_gui() -> Result<(), Box<dyn std::error::Error>> {
     let mut dir = find_visual_source_directory();
@@ -225,7 +253,7 @@ fn run_gui() -> Result<(), Box<dyn std::error::Error>> {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state)
-        .invoke_handler(tauri::generate_handler![get, write])
+        .invoke_handler(tauri::generate_handler![get, write, run_generate])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
@@ -257,4 +285,9 @@ fn write(filename: String, data: String, state: tauri::State<'_, AppState>) {
         Ok(_) => (),
         Err(e) => println!("Error saving: {}", e),
     }
+}
+
+#[tauri::command]
+fn run_generate(state: tauri::State<'_, AppState>) -> Result<(), String> {
+    run_generate_hook(&state.dir).map_err(|e| e.to_string())
 }

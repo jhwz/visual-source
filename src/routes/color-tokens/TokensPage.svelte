@@ -6,6 +6,7 @@
 	import PageHeader from '$lib/PageHeader.svelte';
 	import PageShell from '$lib/PageShell.svelte';
 	import { move_token as move_token_in_groups } from '$lib/move';
+	import { cleanup_token_overrides } from '$lib/operations';
 	import { spec, type Token } from '$lib/spec.svelte.js';
 	import { next_id } from '$lib/utils';
 	import type { build_groups } from './color_tokens';
@@ -71,10 +72,7 @@
 		for (const g of groups) {
 			g.tokens = g.tokens.filter((t1) => t1.id !== id);
 		}
-		// Clean up theme overrides for this token
-		for (const theme of spec.themes) {
-			theme.tokens = theme.tokens.filter((o) => o.tokenId !== id);
-		}
+		cleanup_token_overrides(spec, 'color', id);
 	}
 
 	function remove_empty_groups() {
@@ -218,11 +216,9 @@
 						selected = idx + 1;
 					}}
 					ondelete={() => {
-						const removedIds = new Set(groups[idx].tokens.map((t) => t.id));
+						const removedIds = groups[idx].tokens.map((t) => t.id);
 						groups.splice(idx, 1);
-						for (const theme of spec.themes) {
-							theme.tokens = theme.tokens.filter((o) => !removedIds.has(o.tokenId));
-						}
+						for (const id of removedIds) cleanup_token_overrides(spec, 'color', id);
 						selected = null;
 					}}
 				/>

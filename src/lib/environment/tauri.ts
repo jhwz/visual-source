@@ -12,5 +12,10 @@ export const tauri_storage: Storage = {
 		await invoke('write', { filename: 'visual-source.json', data: json });
 		await invoke('write', { filename: 'AGENTS.md', data: AGENT_INSTRUCTIONS });
 		await invoke('write', { filename: 'CLAUDE.md', data: AGENT_INSTRUCTIONS });
+		try {
+			await invoke('run_generate');
+		} catch (err) {
+			console.error('generate hook failed:', err);
+		}
 	}
 };

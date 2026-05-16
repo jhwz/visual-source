@@ -3,6 +3,7 @@
 	import { tick } from 'svelte';
 	import Button from '$lib/Button.svelte';
 	import IconButton from '$lib/IconButton.svelte';
+	import { palettes as palettes_ops } from '$lib/operations';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import PageShell from '$lib/PageShell.svelte';
 	import Pencil from '$lib/icons/Pencil.svelte';
@@ -39,7 +40,7 @@
 	function delete_color() {
 		if (colorIndex == null) return;
 		const i = colorIndex;
-		palette.colors = palette.colors.filter((_, j) => j !== i);
+		palettes_ops.delete_color(spec, palette.id, i);
 		colorIndex = palette.colors.length === 0 ? null : Math.min(i, palette.colors.length - 1);
 	}
 

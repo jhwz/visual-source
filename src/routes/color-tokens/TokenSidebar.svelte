@@ -6,6 +6,7 @@
 	import { token_css_name } from '$lib/generate/css';
 	import Trash from '$lib/icons/Trash.svelte';
 	import MoveToMenu from '$lib/MoveToMenu.svelte';
+	import { themes as themes_ops } from '$lib/operations';
 	import {
 		spec,
 		themed_token_value,
@@ -58,16 +59,12 @@
 
 	function create_override() {
 		if (!theme) return;
-		const value = token_value(token);
-		theme.tokens.push({
-			tokenId: token.id,
-			value
-		});
+		themes_ops.set_override(spec, theme.id, 'color', token.id, { value: token_value(token) });
 	}
 
 	function clear_override() {
 		if (!theme) return;
-		theme.tokens = theme.tokens.filter((o) => o.tokenId !== token.id);
+		themes_ops.clear_override(spec, theme.id, 'color', token.id);
 	}
 </script>
 
@@ -113,9 +110,11 @@
 				<TokenColor
 					token={editToken}
 					onchange={(t) => {
-						if (!override) return;
-						override.value = t.value;
-						override.$ref = t.$ref;
+						if (!theme) return;
+						themes_ops.set_override(spec, theme.id, 'color', token.id, {
+							value: t.value,
+							$ref: t.$ref
+						});
 					}}
 				/>
 				<Button onclick={clear_override} type="destructive" size="sm">Clear Override</Button>

@@ -3,7 +3,13 @@
 	import FormField from '$lib/FormField.svelte';
 	import { token_css_name } from '$lib/generate/css';
 	import Trash from '$lib/icons/Trash.svelte';
-	import { token_value, type Token, type ThemeTokenOverride } from '$lib/spec.svelte.js';
+	import { themes as themes_ops } from '$lib/operations';
+	import {
+		spec,
+		token_value,
+		type Token,
+		type ThemeTokenOverride
+	} from '$lib/spec.svelte.js';
 	import { activeTheme } from '$lib/theme-context.svelte.js';
 
 	type Props = {
@@ -21,25 +27,17 @@
 
 	function set_override_value(value: string) {
 		if (!theme) return;
-		const existing = theme.spacing.find((o) => o.tokenId === token.id);
-		if (existing) {
-			existing.value = value;
-		} else {
-			theme.spacing.push({ tokenId: token.id, value });
-		}
+		themes_ops.set_override(spec, theme.id, 'spacing', token.id, { value });
 	}
 
 	function clear_override() {
 		if (!theme) return;
-		theme.spacing = theme.spacing.filter((o) => o.tokenId !== token.id);
+		themes_ops.clear_override(spec, theme.id, 'spacing', token.id);
 	}
 
 	function create_override() {
 		if (!theme) return;
-		theme.spacing.push({
-			tokenId: token.id,
-			value: token_value(token)
-		});
+		themes_ops.set_override(spec, theme.id, 'spacing', token.id, { value: token_value(token) });
 	}
 </script>
 

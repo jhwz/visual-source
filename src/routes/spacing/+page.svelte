@@ -2,6 +2,7 @@
 	import Button from '$lib/Button.svelte';
 	import ConfirmDialog from '$lib/ConfirmDialog.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
+	import { spacing as spacing_ops } from '$lib/operations';
 	import PageHeader from '$lib/PageHeader.svelte';
 	import PageShell from '$lib/PageShell.svelte';
 	import { spec, type Token } from '$lib/spec.svelte.js';
@@ -30,11 +31,7 @@
 	}
 
 	function delete_token(token: Token) {
-		spec.spacing.scale = spec.spacing.scale.filter((t) => t.id !== token.id);
-		// Clean up theme overrides that referenced this token.
-		for (const theme of spec.themes) {
-			theme.spacing = theme.spacing.filter((o) => o.tokenId !== token.id);
-		}
+		spacing_ops.delete_token(spec, token.id);
 		if (selectedId === token.id) selectedId = null;
 	}
 </script>

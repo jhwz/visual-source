@@ -6,7 +6,9 @@
 	import { token_css_name } from '$lib/generate/css';
 	import Trash from '$lib/icons/Trash.svelte';
 	import MoveToMenu from '$lib/MoveToMenu.svelte';
+	import { themes as themes_ops } from '$lib/operations';
 	import {
+		spec,
 		themed_token_value,
 		token_value,
 		type Token,
@@ -43,27 +45,17 @@
 
 	function set_override_value(value: string) {
 		if (!theme) return;
-		theme.general ||= [];
-		const existing = theme.general.find((o) => o.tokenId === token.id);
-		if (existing) {
-			existing.value = value;
-		} else {
-			theme.general.push({ tokenId: token.id, value });
-		}
+		themes_ops.set_override(spec, theme.id, 'general', token.id, { value });
 	}
 
 	function create_override() {
 		if (!theme) return;
-		theme.general ||= [];
-		theme.general.push({
-			tokenId: token.id,
-			value: token_value(token)
-		});
+		themes_ops.set_override(spec, theme.id, 'general', token.id, { value: token_value(token) });
 	}
 
 	function clear_override() {
 		if (!theme) return;
-		theme.general = (theme.general ?? []).filter((o) => o.tokenId !== token.id);
+		themes_ops.clear_override(spec, theme.id, 'general', token.id);
 	}
 </script>
 
