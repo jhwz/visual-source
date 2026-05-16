@@ -9,13 +9,14 @@
 	import Pencil from '$lib/icons/Pencil.svelte';
 	import Plus from '$lib/icons/Plus.svelte';
 	import { spec } from '$lib/spec.svelte.js';
-	import { find_by_id } from '$lib/utils.js';
 	import type { PageProps } from './$types.js';
 	import ColorControl from './ColorControl.svelte';
 	import StopEditor from './StopEditor.svelte';
 
 	let { data }: PageProps = $props();
-	let palette = $derived(find_by_id(spec.color.palettes, data.id));
+	// Returns undefined if the palette was just deleted; the template's
+	// `{#if palette}` guard handles the transient frame before navigation.
+	let palette = $derived(spec.color.palettes.find((p) => p.id === data.id));
 
 	let colorIndex: number | null = $state(null);
 
@@ -29,6 +30,7 @@
 	});
 
 	function add_color() {
+		if (!palette) return;
 		if (palette.colors.length === 0) {
 			palette.colors.push('#ffffff');
 		} else {
@@ -38,13 +40,14 @@
 	}
 
 	function delete_color() {
-		if (colorIndex == null) return;
+		if (!palette || colorIndex == null) return;
 		const i = colorIndex;
 		palettes_ops.delete_color(spec, palette.id, i);
 		colorIndex = palette.colors.length === 0 ? null : Math.min(i, palette.colors.length - 1);
 	}
 
 	async function start_rename() {
+		if (!palette) return;
 		nameDraft = palette.name;
 		renaming = true;
 		await tick();
@@ -53,6 +56,7 @@
 	}
 
 	function commit_rename() {
+		if (!palette) return;
 		const next = nameDraft.trim();
 		if (next && next !== palette.name) {
 			palette.name = next;
