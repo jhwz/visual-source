@@ -39,7 +39,7 @@
 			name: `Palette ${spec.color.palettes.length + 1}`,
 			colors: ['#ffffff']
 		});
-		goto(resolve(`/palettes?id=${id}`));
+		goto(`${resolve('/palettes')}?id=${id}`);
 	}
 
 	function request_remove_palette() {
@@ -96,7 +96,7 @@
 					<PaletteButton
 						name={p.name}
 						selected={paletteID === p.id}
-						onclick={() => goto(resolve(`/palettes?id=${p.id}`))}
+						onclick={() => goto(`${resolve('/palettes')}?id=${p.id}`)}
 						onchange={(name) => {
 							p.name = name;
 						}}
