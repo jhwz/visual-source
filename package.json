@@ -13,7 +13,8 @@
     "build": "tauri build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier --write src"
+    "format": "prettier --write src",
+    "release": "bash scripts/release.sh"
   },
   "license": "MIT",
   "devDependencies": {
