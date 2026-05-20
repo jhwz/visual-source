@@ -7,15 +7,11 @@ export const tauri_storage: Storage = {
 		return await invoke<string>('get');
 	},
 	async write_outputs({ manifest, css, json }: StorageOutputs) {
-		await invoke('write', { filename: 'manifest.json', data: manifest });
-		await invoke('write', { filename: 'visual-source.css', data: css });
-		await invoke('write', { filename: 'visual-source.json', data: json });
-		await invoke('write', { filename: 'AGENTS.md', data: AGENT_INSTRUCTIONS });
-		await invoke('write', { filename: 'CLAUDE.md', data: AGENT_INSTRUCTIONS });
-		try {
-			await invoke('run_generate');
-		} catch (err) {
-			console.error('generate hook failed:', err);
-		}
+		await invoke('write_outputs', {
+			manifest,
+			css,
+			json,
+			agents: AGENT_INSTRUCTIONS
+		});
 	}
 };

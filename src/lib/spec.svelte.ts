@@ -51,17 +51,37 @@ storage.load_manifest().then((str) => {
 
 	$effect.root(() => {
 		$effect(() => {
-			write_spec_outputs();
+			// Touch every reactive field we depend on so the effect re-runs on any
+			// change, then hand off to the throttled scheduler.
+			JSON.stringify(spec);
+			schedule_write_spec_outputs();
 		});
 	});
 });
 
 export async function write_spec_outputs() {
+	if (write_timer !== null) {
+		clearTimeout(write_timer);
+		write_timer = null;
+	}
+	last_write = Date.now();
 	await storage.write_outputs({
 		manifest: JSON.stringify(spec),
 		css: generate_css(spec),
 		json: generate_json(spec)
 	});
+}
+
+let write_timer: ReturnType<typeof setTimeout> | null = null;
+let last_write = 0;
+
+function schedule_write_spec_outputs() {
+	if (write_timer !== null) return;
+	const delay = Math.max(0, 500 - (Date.now() - last_write));
+	write_timer = setTimeout(() => {
+		write_timer = null;
+		write_spec_outputs();
+	}, delay);
 }
 
 export function token_value(token: Token, specification: Spec = spec): string {

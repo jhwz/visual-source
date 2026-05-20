@@ -253,7 +253,7 @@ fn run_gui() -> Result<(), Box<dyn std::error::Error>> {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state)
-        .invoke_handler(tauri::generate_handler![get, write, run_generate])
+        .invoke_handler(tauri::generate_handler![get, write_outputs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
@@ -278,16 +278,56 @@ fn get(state: tauri::State<'_, AppState>) -> String {
 }
 
 #[tauri::command]
-fn write(filename: String, data: String, state: tauri::State<'_, AppState>) {
-    let filename = state.dir.join(filename);
-    println!("Saving data to {:?}", filename.to_str());
-    match fs::write(filename, data) {
-        Ok(_) => (),
-        Err(e) => println!("Error saving: {}", e),
+fn write_outputs(
+    manifest: String,
+    css: String,
+    json: String,
+    agents: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    let dir = &state.dir;
+    let files: [(&str, &str); 5] = [
+        (MANIFEST_FILENAME, &manifest),
+        ("visual-source.css", &css),
+        ("visual-source.json", &json),
+        ("AGENTS.md", &agents),
+        ("CLAUDE.md", &agents),
+    ];
+    for (name, content) in &files {
+        fs::write(dir.join(name), content)
+            .map_err(|e| format!("failed to write {}: {}", name, e))?;
     }
-}
 
-#[tauri::command]
-fn run_generate(state: tauri::State<'_, AppState>) -> Result<(), String> {
-    run_generate_hook(&state.dir).map_err(|e| e.to_string())
+    let hook = dir.join(GENERATE_HOOK_FILENAME);
+    if hook.exists() {
+        let start = std::time::Instant::now();
+        let result = std::process::Command::new(&hook).current_dir(dir).output();
+        let ms = start.elapsed().as_millis();
+        match result {
+            Ok(output) if output.status.success() => {
+                println!("saved {} files; ./{} ok ({}ms)", files.len(), GENERATE_HOOK_FILENAME, ms);
+            }
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!(
+                    "saved {} files; ./{} failed ({}): {}",
+                    files.len(),
+                    GENERATE_HOOK_FILENAME,
+                    output.status,
+                    stderr.trim()
+                );
+            }
+            Err(e) => {
+                println!(
+                    "saved {} files; failed to invoke ./{}: {}",
+                    files.len(),
+                    GENERATE_HOOK_FILENAME,
+                    e
+                );
+            }
+        }
+    } else {
+        println!("saved {} files", files.len());
+    }
+    Ok(())
 }
